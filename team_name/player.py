@@ -47,82 +47,87 @@ class Player:
         # update player action
         # format of state e.g., {(-5,0):"Block", (-3,2):["player","s"], (-2,3):["opponent","p"]}
         # format of prev_state_record same as state e.g., {(-3,2):["player","s"], (-2,3):["opponent","p"]}
-        # record the 6 moving tokens' positions in previous turn, and delete from the previous state
+        # record the 2 moving tokens' positions in previous state, and delete from the previous state
+        # idea:把这次移动的token位置记下来 然后把他们在state里面删掉 为了后面battle不和这次移动的token上一轮的位置发生冲突
+
         prev_state_record = {}
-        for item in player_action:
-            if item[0] != "THROW":
-                loc = {item[1]: self.state[item[1]]}
-                prev_state_record.update(loc)
-                del self.state[item[1]]
-        for item in opponent_action:
-            if item[0] != "THROW":
-                loc = {item[1]: self.state[item[1]]}
-                prev_state_record.update(loc)
-                del self.state[item[1]]
+        if player_action[0] != "THROW":
+            loc = {player_action[1]: self.state[player_action[1]]}
+            prev_state_record.update(loc)
+            del self.state[player_action[1]]
+
+        if opponent_action[0] != "THROW":
+            loc = {opponent_action[1]: self.state[opponent_action[1]]}
+            prev_state_record.update(loc)
+            del self.state[opponent_action[1]]
 
         # consider the movement in this turn
-        for item in player_action:
-            if item[0] == "THROW":
-                if item[2] not in self.state:
-                    loc = {item[2]: ["player", item[1]]}
-                    self.state.update(loc)
-                else:
-                    # if another token occupy the same place, need to check which token wins
-                    rps = item[1]
-                    old_rps = (self.state[item[2]])[1]
-                    if if_defeat(rps, old_rps):
-                        self.state[item[2]] = ["player",rps]
-                    else:
-                        # if this token lose, then take this token away from the state
-                        pass
+        # idea: 若是throw说明之前没在state里出现过 只要考虑它要放的位置需不需要和别的token battle，
+        # 赢了则在state里把这个位置改为这个token的信息，输了则不在state记入这个token
+        # 若不是throw，则可以通过原位置在prev_state_record里找到相应的信息，在判断要放的位置是否需要和别的token battle
+        # battle -> 赢了则在state里把这个位置改为这个token的信息，输了则不在state记入这个token
+        # (因为最开始都把本轮要move的token的原位置在state里删掉了，只是在prev_state_record里有
+
+        if player_action[0] == "THROW":
+            if player_action[2] not in self.state:
+                loc = {player_action[2]: ["player", player_action[1]]}
+                self.state.update(loc)
             else:
-                # rps means whether the token is rock/paper/scissors
-                # if the action is not throw, the rps has been recorded before
-                previous_loc = item[1]
-                rps = (prev_state_record[previous_loc])[1]
-                if item[2] not in self.state:
-                    loc = {item[2]: ["player", rps]}
-                    self.state.update(loc)
+                # if another token occupy the same place, need to check which token wins
+                rps = player_action[1]
+                old_rps = (self.state[player_action[2]])[1]
+                if if_defeat(rps, old_rps):
+                    self.state[player_action[2]] = ["player", rps]
                 else:
-                    # if another token occupy the same place, need to check which token wins
-                    old_rps = (self.state[item[2]])[1]
-                    if if_defeat(rps, old_rps):
-                        self.state[item[2]] = ["player",rps]
-                    else:
-                        # if this token lose, then take this token away from the state
-                        pass
+                    # if this token lose, then take this token away from the state
+                    pass
+        else:
+            # rps means whether the token is rock/paper/scissors
+            # if the action is not throw, the rps has been recorded before
+            previous_loc = player_action[1]
+            rps = (prev_state_record[previous_loc])[1]
+            if player_action[2] not in self.state:
+                loc = {player_action[2]: ["player", rps]}
+                self.state.update(loc)
+            else:
+                # if another token occupy the same place, need to check which token wins
+                old_rps = (self.state[player_action[2]])[1]
+                if if_defeat(rps, old_rps):
+                    self.state[player_action[2]] = ["player", rps]
+                else:
+                    # if this token lose, then take this token away from the state
+                    pass
 
         # update opponent action
-        for item in opponent_action:
-            if item[0] == "THROW":
-                if item[2] not in self.state:
-                    loc = {item[2]: ["opponent", item[1]]}
-                    self.state.update(loc)
-                else:
-                    # if another token occupy the same place, need to check which token wins
-                    rps = item[1]
-                    old_rps = (self.state[item[2]])[1]
-                    if if_defeat(rps, old_rps):
-                        self.state[item[2]] = ["opponent", rps]
-                    else:
-                        # if this token lose, then take this token away from the state
-                        pass
+        if opponent_action[0] == "THROW":
+            if opponent_action[2] not in self.state:
+                loc = {opponent_action[2]: ["opponent", opponent_action[1]]}
+                self.state.update(loc)
             else:
-                # rps means whether the token is rock/paper/scissors
-                # if the action is not throw, the rps has been recorded before
-                previous_loc = item[1]
-                rps = (prev_state_record[previous_loc])[1]
-                if item[2] not in self.state:
-                    loc = {item[2]: ["opponent", rps]}
-                    self.state.update(loc)
+                # if another token occupy the same place, need to check which token wins
+                rps = opponent_action[1]
+                old_rps = (self.state[opponent_action[2]])[1]
+                if if_defeat(rps, old_rps):
+                    self.state[opponent_action[2]] = ["opponent", rps]
                 else:
-                    # if another token occupy the same place, need to check which token wins
-                    old_rps = (self.state[item[2]])[1]
-                    if if_defeat(rps, old_rps):
-                        self.state[item[2]] = ["opponent", rps]
-                    else:
-                        # if this token lose, then take this token away from the state
-                        pass
+                    # if this token lose, then take this token away from the state
+                    pass
+        else:
+            # rps means whether the token is rock/paper/scissors
+            # if the action is not throw, the rps has been recorded before
+            previous_loc = opponent_action[1]
+            rps = (prev_state_record[previous_loc])[1]
+            if opponent_action[2] not in self.state:
+                loc = {opponent_action[2]: ["opponent", rps]}
+                self.state.update(loc)
+            else:
+                # if another token occupy the same place, need to check which token wins
+                old_rps = (self.state[opponent_action[2]])[1]
+                if if_defeat(rps, old_rps):
+                    self.state[opponent_action[2]] = ["opponent", rps]
+                else:
+                    # if this token lose, then take this token away from the state
+                    pass
 
 def if_defeat(new,old):
     if (new == 's') & (old == 'p'):
