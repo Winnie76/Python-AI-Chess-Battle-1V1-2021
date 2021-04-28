@@ -25,7 +25,8 @@ class Player:
             loc = {tuple(item[1:3]): item[0]}
             self.state.update(loc)
 
-
+        # format of state e.g., {(-5,0):"Block"}
+        # 之后也可以通过 len(self.state[position]) 是否大于1来判断是否超出了boundary
 
     def action(self):
         """
@@ -44,7 +45,8 @@ class Player:
         """
         # put your code here
         # update player action
-
+        # format of state e.g., {(-5,0):"Block", (-3,2):["player","s"], (-2,3):["opponent","p"]}
+        # format of prev_state_record same as state e.g., {(-3,2):["player","s"], (-2,3):["opponent","p"]}
         # record the 6 moving tokens' positions in previous turn, and delete from the previous state
         prev_state_record = {}
         for item in player_action:
