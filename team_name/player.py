@@ -16,15 +16,24 @@ class Player:
             self.throw_row_direction = 1 # for throwing the nth token, domain of available row is r0<=n<r0+n
         else:
             self.r0=4
-            self.throw_row_direction = 1 # for throwing the nth token, domain of available row is r0<=n<r0-n
+            self.throw_row_direction = -1 # for throwing the nth token, domain of available row is r0<=n<r0-n
 
         self.state = {}
         # set board range, make the board circled by "Block" tokens to avoid overstepping the boundary
-        range_limit = board_range()
-        for item in range_limit:
-            loc = {tuple(item[1:3]): item[0]}
-            self.state.update(loc)
+        #range_limit = board_range()
+        #for item in range_limit:
+        #    loc = {tuple(item[1:3]): item[0]}
+        #    self.state.update(loc)
 
+        self.board = [(4,-4),(4,-3),(4,-2),(4,-1),(4,0),
+                      (3,-4),(3,-3),(3,-2),(3,-1),(3,0),(3,1),
+                      (2,-4),(2,-3),(2,-2),(2,-1),(2,0),(2,1),(2,2),
+                      (1,-4),(1,-3),(1,-2),(1,-1),(1,0),(1,1),(1,2),(1,3),
+                      (0,-4),(0,-3),(0,-2),(0,-1),(0,0),(0,1),(0,2),(0,3),(0,4),
+                      (-1,-3),(-1,-2),(-1,-1),(-1,0),(-1,1),(-1,2),(-1,3),(-1,4),
+                      (-2,-2),(-2,-1),(-2,0),(-2,1),(-2,2),(-2,3),(-2,4),
+                      (-3,-1),(-3,0),(-3,1),(-3,2),(-3,3),(-3,4),
+                      (-4,0),(-4,1),(-4,2),(-4,3),(-4,4)]
         # format of state e.g., {(-5,0):"Block"}
         # 之后也可以通过 len(self.state[position]) 是否大于1来判断是否超出了boundary
 
@@ -34,36 +43,58 @@ class Player:
         of the game, select an action to play this turn.
         """
         # put your code here
-        //在state里找出所有player token； 所有opponent token
+        # 在state里找出所有player token； 所有opponent token
         current_state=self.state
+        board = self.board
+        r0 = self.r0
         player_list=token_list(current_state, "player")
         opponent_list=token_list(current_state, "opponent")
-        max1_layer=[]
-        for item in player_list: #max level
-            ol = possible_move(current_state, item)
-            # 记得把throw加进ol
-            min1_layer=[]
-            for opp in opponent_list; #min_level
-                opp_ol = possible_move(current_state, opp)
-                # 记得把throw加进opp_ol, r/p/s, 所有位置
-                max2_layer=[]
-                for action in ol: #max_level
-                    min2_layer=[]
-                    for opp_action in opp_ol: #min_level
-                        update(self, action, opp_action) #如果再来一轮 ，应该从这里加入
-                        eval=evaluate(self.state)
-                        min2_layer.append(eval)
-                        self.state = current_state
-                    max2_layer.append(min2_layer)
-                min1_layer.append(max2_layer)
-            max1_layer.append(min1_layer)
 
         #[[[[1,2],[2,3]],[[2,3],[1,3]]],[[[1,2],[2,3]],[[2,3],[1,3]]]]
+        character = ["s", "p", "r"]
+        # 考虑throw
+
+        no_rows = len(player_list)
+        throw_range = r0 + no_rows * self.throw_row_direction
+
+        # store all possible throw actions for player and opponent
+        # def possible_throw 写在最下面了
+        possible_throw_player = possible_throw(current_state, board, r0, throw_range, "player")
+        possible_throw_opponent = possible_throw(current_state, board, r0, throw_range, "opponent")
+
+        # store all possible actions for player and opponent: slide, swing, throw
+        # for player
+        player_total = []
+        for item in player_list:
+            ol = possible_move(current_state, item)
+            player_total.append(ol)
+        player_total.append(possible_throw_player)
+
+        # for opponent
+        opp_total = []
+        for opp in opponent_list:
+            opp_ol = possible_move(current_state, opp)
+            opp_total.append(opp_pl)
+        opp_total.append(possible_throw_opponent)
+
+        # build min_max tree
+        max_layer=[]
+        for action in player_total:
+            min_layer=[]
+            for opp_action in opp_total:
+                update(self, action, opp_action)  # 可以这样用吗？ （如果再来一轮 ，应该从这里加入, 感觉可以再加一层）
+                eval = evaluate(self.state)
+                min_layer.append(eval)
+                self.state = current_state
+            max_layer.append(min_layer)
+
+        #[[1,2],[2,3]]
+
         # 加入pruning
-        # 加入后续判断yeye
-
-
-
+        # 加入后续判断
+        # def evaluation function没写
+        # def 方位辨别找min dist没写
+        # 换了board limit 方便找能thorw的位置， 记得把possible move里面加上if在board的条件
 
 
     
@@ -161,46 +192,6 @@ class Player:
                     # if this token lose, then take this token away from the state
                     pass
 
-def board_range():
-    v1 = [0, -5]
-    v2 = [5, -5]
-    v3 = [5, 0]
-    v4 = [0, 5]
-    v5 = [-5, 5]
-    v6 = [-5, 0]
-    range_limit = []
-    r = v1[0]
-    q = v1[1]
-    for i in range(6):
-        r_q = ['Block', r + i, q]
-        range_limit.append(r_q)
-    r = v2[0]
-    q = v2[1]
-    for i in range(1, 6, 1):
-        r_q = ['Block', r, q + i]
-        range_limit.append(r_q)
-    r = v3[0]
-    q = v3[1]
-    for i in range(1, 6, 1):
-        r_q = ['Block', r - i, q + i]
-        range_limit.append(r_q)
-    r = v4[0]
-    q = v4[1]
-    for i in range(1, 6, 1):
-        r_q = ['Block', r - i, q]
-        range_limit.append(r_q)
-    r = v5[0]
-    q = v5[1]
-    for i in range(1, 6, 1):
-        r_q = ['Block', r, q - i]
-        range_limit.append(r_q)
-    r = v6[0]
-    q = v6[1]
-    for i in range(1, 6, 1):
-        r_q = ['Block', r + i, q - i]
-        range_limit.append(r_q)
-    return (range_limit)
-
 def possible_move(state, player_current_pos):
     ol = []
     # six hex connected to the upper_current_pos
@@ -259,11 +250,9 @@ def six_hex_surrond(token):  # find the six surronding hex for a given hex
         six_hex.append(loc)
     return six_hex
 
-def evaluate(state):
+#def evaluate(state):
 
-
-def least_distance(t1, t2):
-
+#def least_distance(t1, t2):
 
 
 def token_list(state, side): #side "player"/"opponent"
@@ -294,3 +283,21 @@ def if_defeat(new, old):
         return "WIN"
     else:
         return "LOSE"
+
+def possible_throw(state, board, r0, throw_range, player_or_opponent):
+    character = ["r", "s", "p"]
+    for row in range(r0, throw_range):
+        for item in board:
+            if (item[0] == row):
+                if (item not in state):
+                    for char in character:
+                        item_format = ["THROW", char, item]
+                        possible_throw.append(item_format)
+                else:
+                    if (state[item][0] != player_or_opponent):
+                        for char in character:
+                            t = state[item][1]
+                            if (if_defeat(char, t) != "LOSE"):
+                                item_format = ["THROW", char, item]
+                                possible_throw.append(item_format)
+    return (possible_throw)
