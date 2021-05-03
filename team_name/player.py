@@ -222,10 +222,10 @@ def possible_move(state, player_current_pos):
                 for j in range(i - 1, i + 2, 1):  # three hex opposite side
                     if (j == 6):  # the hex next to no.5 in the clockwise list is no.0 and no.4
                         ol = if_ol_append(
-                            state, layer2[0], player_current_pos, ol, "SLIDE")
+                            state, layer2[0], player_current_pos, ol, "SWING")
                     else:
                         ol = if_ol_append(
-                            state, layer2[j], player_current_pos, ol, "SLIDE")
+                            state, layer2[j], player_current_pos, ol, "SWING")
     return ol #每一个action和update中action格式一样
 
 def if_ol_append(state, item, token, ol, method):  # check if the item should be added to open list
