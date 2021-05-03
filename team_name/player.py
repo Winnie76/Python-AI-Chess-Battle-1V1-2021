@@ -43,7 +43,7 @@ class Player:
             ol = possible_move(current_state, item)
             min1_layer=[]
             for opp in opponent_list; #min_level
-                opp_ol = possible_move(current_state, item)
+                opp_ol = possible_move(current_state, opp)
                 max2_layer=[]
                 for action in ol: #max_level
                     min2_layer=[]
@@ -158,19 +158,6 @@ class Player:
                 else:
                     # if this token lose, then take this token away from the state
                     pass
-
-def if_defeat(new, old):
-    if (new == old):
-        return "DRAW"
-    elif (new == 'r') & (old == 's'):
-        return "WIN"
-    elif (new == 'p') & (old == 'r'):
-        return "WIN"
-    elif (new == 's') & (old == 'p'):
-        return "WIN"
-    else:
-        return "LOSE"
-
 
 def board_range():
     v1 = [0, -5]
@@ -324,3 +311,15 @@ def token_list(state, side): #side "player"/"opponent"
                         j = {key: state[key][1]}
                         token_list.update(j)
     return token_list
+
+def if_defeat(new, old):
+    if (new == old):
+        return "DRAW"
+    elif (new == 'r') & (old == 's'):
+        return "WIN"
+    elif (new == 'p') & (old == 'r'):
+        return "WIN"
+    elif (new == 's') & (old == 'p'):
+        return "WIN"
+    else:
+        return "LOSE"
