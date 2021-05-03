@@ -54,7 +54,7 @@ class Player:
                         eval=evaluate(self.state)
                         min2_layer.append(eval)
                         self.state = current_state
-                    max2_layer.append(min_layer)
+                    max2_layer.append(min2_layer)
                 min1_layer.append(max2_layer)
             max1_layer.append(min1_layer)
 
