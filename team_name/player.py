@@ -98,7 +98,7 @@ class Player:
 
 
     
-    def update(self, opponent_action, player_action):
+    def update(self, opponent_action, player_action): # 这里没考虑draw
         """
         Called at the end of each turn to inform this player of both
         players' chosen actions. Update your internal representation
