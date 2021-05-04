@@ -66,15 +66,15 @@ class Player:
         # for player
         player_total = []
         for item in player_list:
-            ol = possible_move(current_state, item)
+            ol = possible_move(current_state, item, "player")
             player_total.append(ol)
         player_total.append(possible_throw_player)
 
         # for opponent
         opp_total = []
         for opp in opponent_list:
-            opp_ol = possible_move(current_state, opp)
-            opp_total.append(opp_pl)
+            opp_ol = possible_move(current_state, opp, "opponent")
+            opp_total.append(opp_ol)
         opp_total.append(possible_throw_opponent)
 
         # build min_max tree
@@ -192,31 +192,31 @@ class Player:
                     # if this token lose, then take this token away from the state
                     pass
 
-def possible_move(state, player_current_pos):
+def possible_move(state, current_pos, player_or_opponent):
     ol = []
     # six hex connected to the upper_current_pos
-    layer1 = six_hex_surrond(player_current_pos)
+    layer1 = six_hex_surrond(current_pos)
     # player_current_pos的format是state的key ==> (x,y) ?
     # slide for all possible surrounding hexes
     for surround_item in layer1:
         # surround_item is [1,2]   upper_current_pos is [x, y]
-        ol = if_ol_append(state, surround_item, player_current_pos, ol, "SLIDE")
+        ol = if_ol_append(state, surround_item, current_pos, ol, "SLIDE")
 
     # swing
     for i in range(6):
         surround_item = layer1[i]
         if (tuple(surround_item) in state):
             # have upper upper_current_pos --> can swing
-            if (state[tuple(surround_item)][0] == "player"):
+            if (state[tuple(surround_item)][0] == player_or_opponent):
                 # six hex connected to the upper upper_current_pos for swing
                 layer2 = six_hex_surrond(surround_item)
                 for j in range(i - 1, i + 2, 1):  # three hex opposite side
                     if (j == 6):  # the hex next to no.5 in the clockwise list is no.0 and no.4
                         ol = if_ol_append(
-                            state, layer2[0], player_current_pos, ol, "SWING")
+                            state, layer2[0], current_pos, ol, "SWING")
                     else:
                         ol = if_ol_append(
-                            state, layer2[j], player_current_pos, ol, "SWING")
+                            state, layer2[j], current_pos, ol, "SWING")
     return ol #每一个action和update中action格式一样
 
 def if_ol_append(state, item, token, ol, method):  # check if the item should be added to open list
@@ -301,3 +301,47 @@ def possible_throw(state, board, r0, throw_range, player_or_opponent):
                                 item_format = ["THROW", char, item]
                                 possible_throw.append(item_format)
     return (possible_throw)
+
+# least_distance with only consider slide
+# go from token1 towards token2
+# divide the board into 6 directions, and each 2 have the same properties => 3 kinds of direction properties
+def least_slide_distance(token1, token2): # format of token1 and token2 is the postion (-1,2)
+    x1 = token1[0]
+    y1 = token1[1]
+    x2 = token2[0]
+    y2 = token2[1]
+    if ((x1-x2)*(y1-y2) >= 0): # find what direction is token2 corresponding to token1
+        dist = abs(x1-x2) + abs(y1-y2) # calculate the min_dist based on the direction property
+    else:
+        if (abs(x2-x1) >= abs(y2-y1)):
+            dist = abs(x1-x2)
+        else:
+            dist = abs(y1-y2)
+    return dist
+
+# least_distance with consider both slide and swing
+# token_list is whether player_list or opponent_list depends on whether token1 is player token or opp token
+def least_distance(state, token1, token2, player_or_opponent): #consider both slide and swing 看token1 去到token2 的距离
+
+    # six tokens surrounding token1
+    layer1 = six_hex_surrond(token1) # format is [[1,2],[-1,2],...]
+    min_dist = least_slide_distance(token1, token2)
+
+    # find swing , if can swing, count the distance as min(slide, dist after swing + 1)
+    for i in range(6):
+        surround_item = layer1[i]
+        if (tuple(surround_item) in state):
+            # have neighbor with same team --> can swing
+            if (state[tuple(surround_item)][0] == player_or_opponent):
+                # find 6 hex connect to the previous neighbor
+                layer2 = six_hex_surrond(surround_item)
+                for j in range(i - 1, i + 2, 1):  # three hex opposite side
+                    if (j == 6):  # the hex next to no.5 in the clockwise list is no.0 and no.4
+                        dist = least_slide_distance(tuple(layer2[0]), token2) + 1 # count in swing movement to that position
+                        if (dist < min_dist):
+                            min_dist = dist
+                    else:
+                        dist = least_slide_distance(tuple(layer2[j]), token2) + 1
+                        if (dist < min_dist):
+                            min_dist = dist
+    return min_dist
