@@ -23,7 +23,7 @@ class Player:
         # for item in range_limit:
         #    loc = {tuple(item[1:3]): item[0]}
         #    self.state.update(loc)
-
+        self.player_action = ()
         self.board = [(4, -4), (4, -3), (4, -2), (4, -1), (4, 0),
                       (3, -4), (3, -3), (3, -2), (3, -1), (3, 0), (3, 1),
                       (2, -4), (2, -3), (2, -2), (2, -1), (2, 0), (2, 1), (2, 2),
@@ -89,7 +89,7 @@ class Player:
                     min_layer.append(eval)
                     self.state = current_state
                     if opp_action == opp_total[-1]:  # 说明这个predecessor下面的node都大于之前的max_min => max_min更改
-                        min_max = min_value(min_layer)  # update min_max
+                        min_max = min(min_layer)  # update min_max
                         self.player_action = action  # update player_action leads to the state with min_max
                 else:
                     self.state = current_state
@@ -263,9 +263,82 @@ def six_hex_surrond(token):  # find the six surronding hex for a given hex
     return six_hex
 
 
-# def evaluate(state):
-
-# def least_distance(t1, t2):
+def evaluation(state, which_side):
+    eval_score = 0.0
+    for coor in state.keys():
+        # 1.same coordinate player defeat opponent 2.same coordinate opponent defeat player
+        num_coor_tokens = len(state[coor])
+        num_differ_symbols = func_symbolsInOneHex(state[coor])
+        if num_coor_tokens > 1 and num_differ_symbols == 2:
+            for i in range(num_coor_tokens):
+                if state[coor][i][0] == 'player':
+                    for j in range(num_coor_tokens):
+                        if state[coor][j][0] == 'opponent':
+                            if if_defeat(state[coor][i][1], state[coor][j][1]) == "WIN":
+                                eval_score += 100
+                            elif if_defeat(state[coor][i][1], state[coor][j][1]) == "LOSE":
+                                eval_score -= 100
+        # 3.how close together is player's tokens
+        # loop through all tokens in that hex and check if it's player
+        for token_i in range(len(state[coor])):
+            if state[coor][token_i][0] == 'player':
+                # loop through all tokens in the state
+                for coor_i in state.keys():
+                    if coor_i != coor:
+                        for other_token in state[coor_i]:
+                            # found token that is also player and has differnent symbol
+                            if other_token[0] == 'player' and if_defeat(other_token[1], state[coor][token_i][1]) != "DRAW":
+                                distance = func_hex_dist(coor, coor_i)
+                                if distance == 1:
+                                    eval_score += 3
+                                elif distance == 2:
+                                    eval_score += 2
+                                elif distance == 3:
+                                    eval_score += 1
+                                elif distance == 6:
+                                    eval_score += -1
+                                elif distance == 7:
+                                    eval_score += -2
+                                elif distance == 8:
+                                    eval_score += -3
+                            # 4.how close are defeatable opponent tokens
+                            if other_token[0] == 'opponent' and if_defeat(state[coor][token_i][1], other_token[1]) == "WIN":
+                                distance = func_hex_dist(coor, coor_i)
+                                if distance == 1:
+                                    eval_score += 30
+                                elif distance == 2:
+                                    eval_score += 20
+                                elif distance == 3:
+                                    eval_score += 10
+                            # 5.how close are undefeatable opponent tokens
+                            if other_token[0] == 'opponent' and if_defeat(state[coor][token_i][1], other_token[1]) == "LOSE":
+                                distance = func_hex_dist(coor, coor_i)
+                                if distance == 1:
+                                    eval_score += -30
+                                elif distance == 2:
+                                    eval_score += -20
+                                elif distance == 3:
+                                    eval_score += -10
+                # 6.how close are player's token towards our side
+                if which_side == 'lower':
+                    if coor[0] == 4:
+                        eval_score += 2
+                    if coor[0] == 3:
+                        eval_score += 1.5
+                    if coor[0] == 2:
+                        eval_score += 1
+                    if coor[0] == 1:
+                        eval_score += 0.5
+                if which_side == 'upper':
+                    if coor[0] == -4:
+                        eval_score += 2
+                    if coor[0] == -3:
+                        eval_score += 1.5
+                    if coor[0] == -2:
+                        eval_score += 1
+                    if coor[0] == -1:
+                        eval_score += 0.5
+    return eval_score
 
 
 def token_list(state, side):  # side "player"/"opponent"
@@ -321,18 +394,18 @@ def possible_throw(state, board, r0, throw_range, player_or_opponent_list):
 # least_distance with only consider slide
 # go from token1 towards token2
 # divide the board into 6 directions, and each 2 have the same properties => 3 kinds of direction properties
-def least_slide_distance(token1, token2):  # format of token1 and token2 is the postion (-1,2)
-    x1 = token1[0]
-    y1 = token1[1]
-    x2 = token2[0]
-    y2 = token2[1]
-    if (x1 - x2) * (y1 - y2) >= 0:  # find what direction is token2 corresponding to token1
-        dist = abs(x1 - x2) + abs(y1 - y2)  # calculate the min_dist based on the direction property
+def least_slide_distance(p0, p1):  # format of token1 and token2 is the postion (-1,2)
+    x0 = p0[0]
+    y0 = p0[1]
+    x1 = p1[0]
+    y1 = p1[1]
+    dx = x1 - x0
+    dy = y1 - y0
+
+    if dx * dy > 0:  # find what direction is token2 corresponding to token1
+        dist = abs(dx + dy)  # calculate the min_dist based on the direction property
     else:
-        if abs(x2 - x1) >= abs(y2 - y1):
-            dist = abs(x1 - x2)
-        else:
-            dist = abs(y1 - y2)
+        dist = max(abs(dx), abs(dy))
     return dist
 
 
@@ -363,13 +436,3 @@ def least_distance(state, token1, token2, player_or_opponent_list):  # consider 
                         if dist < min_dist:
                             min_dist = dist
     return min_dist
-
-
-def min_value(list_value):
-    min = list_value[0]
-    for item in list_value:
-        if item < min:
-            min = item
-        else:
-            pass
-    return min
