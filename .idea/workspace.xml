@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="17e935c6-3bb1-4e2d-8531-fda6639bebe1" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/team_name/player.py" beforeDir="false" afterPath="$PROJECT_DIR$/team_name/player.py" afterDir="false" />
-    </list>
+    <list default="true" id="17e935c6-3bb1-4e2d-8531-fda6639bebe1" name="Default Changelist" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -13,6 +11,7 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="ProjectId" id="1rvJodcG5Ti8wanxxVWRFQnM5iB" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
