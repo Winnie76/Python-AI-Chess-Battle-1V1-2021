@@ -100,7 +100,7 @@ class Player:
             # 3 different symbols occupying 1 hex
             if len(symbols) == 3:
                 del self.state[opponent_destination]
-
+            # !!!!有问题， Jupyter有报错！！！！！！！！！！！！！！！！！！！暂时不知道哪里错了
             # 2 different symbols occupying 1 hex
             elif len(symbols) == 2:
                 if opponent_symbol == player_symbol:
