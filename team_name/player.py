@@ -104,100 +104,254 @@ class Player:
         # def 方位辨别找min dist没写
         # 换了board limit 方便找能thorw的位置， 记得把possible move里面加上if在board的条件
 
-    def update(self, opponent_action, player_action):  # 这里没考虑draw
-        """
-        Called at the end of each turn to inform this player of both
-        players' chosen actions. Update your internal representation
-        of the game state.
-        The parameter opponent_action is the opponent's chosen action,
-        and player_action is this instance's latest chosen action.
-        """
-        # put your code here
-        # update player action
-        # format of state e.g., {(-5,0):"Block", (-3,2):["player","s"], (-2,3):["opponent","p"]}
-        # format of prev_state_record same as state e.g., {(-3,2):["player","s"], (-2,3):["opponent","p"]}
-        # record the 2 moving tokens' positions in previous state, and delete from the previous state
-        # idea:把这次移动的token位置记下来 然后把他们在state里面删掉 为了后面battle不和这次移动的token上一轮的位置发生冲突
+    def update(self, opponent_action, player_action):
+            """
+            Called at the end of each turn to inform this player of both
+            players' chosen actions. Update your internal representation
+            of the game state.
+            The parameter opponent_action is the opponent's chosen action,
+            and player_action is this instance's latest chosen action.
+            """
+            # put your code here
+            # format of state & prev_state_record      e.g., {(-5,0):"Block", (-3,2):["player","s"], (-2,3):["opponent","p"]}
+            # record the 2 moving tokens' positions in previous state, and delete from the current state
+            
+            self.win = 0 # no.tokens defeat compare to previous state
+            self.loss = 0 #no.tokens loss compare to previous state
+        
+            # get the destination(x, y) opponent and player are going
+            opponent_destination = opponent_action[2]
+            player_destination = player_action[2]
 
-        prev_state_record = {}
-        if player_action[0] != "THROW":
-            loc = {player_action[1]: self.state[player_action[1]]}
-            prev_state_record.update(loc)
-            del self.state[player_action[1]]
-
-        if opponent_action[0] != "THROW":
-            loc = {opponent_action[1]: self.state[opponent_action[1]]}
-            prev_state_record.update(loc)
-            del self.state[opponent_action[1]]
-
-        # consider the movement in this turn
-        # idea: 若是throw说明之前没在state里出现过 只要考虑它要放的位置需不需要和别的token battle，
-        # 赢了则在state里把这个位置改为这个token的信息，输了则不在state记入这个token
-        # 若不是throw，则可以通过原位置在prev_state_record里找到相应的信息，在判断要放的位置是否需要和别的token battle
-        # battle -> 赢了则在state里把这个位置改为这个token的信息，输了则不在state记入这个token
-        # (因为最开始都把本轮要move的token的原位置在state里删掉了，只是在prev_state_record里有
-
-        if player_action[0] == "THROW":
-            if player_action[2] not in self.state:
-                loc = {player_action[2]: ["player", player_action[1]]}
-                self.state.update(loc)
+            # get symbols for opponent and player
+            if player_action[0] == "THROW":
+                player_symbol = player_action[1]
             else:
-                # if another token occupy the same place, need to check which token wins
-                rps = player_action[1]
-                old_rps = (self.state[player_action[2]])[1]
-                if if_defeat(rps, old_rps):
-                    self.state[player_action[2]] = ["player", rps]
-                else:
-                    # if this token lose, then take this token away from the state
-                    pass
-        else:
-            # rps means whether the token is rock/paper/scissors
-            # if the action is not throw, the rps has been recorded before
-            previous_loc = player_action[1]
-            rps = (prev_state_record[previous_loc])[1]
-            if player_action[2] not in self.state:
-                loc = {player_action[2]: ["player", rps]}
-                self.state.update(loc)
+                # if more than one token in a hex , they must have the same symbol
+                player_symbol = self.state[player_action[1]][0][1]
+            if opponent_action[0] == "THROW":
+                opponent_symbol = opponent_action[1]
             else:
-                # if another token occupy the same place, need to check which token wins
-                old_rps = (self.state[player_action[2]])[1]
-                if if_defeat(rps, old_rps):
-                    self.state[player_action[2]] = ["player", rps]
-                else:
-                    # if this token lose, then take this token away from the state
-                    pass
+                opponent_symbol = self.state[opponent_action[1]][0][1]
 
-        # update opponent action
-        if opponent_action[0] == "THROW":
-            if opponent_action[2] not in self.state:
-                loc = {opponent_action[2]: ["opponent", opponent_action[1]]}
-                self.state.update(loc)
-            else:
-                # if another token occupy the same place, need to check which token wins
-                rps = opponent_action[1]
-                old_rps = (self.state[opponent_action[2]])[1]
-                if if_defeat(rps, old_rps):
-                    self.state[opponent_action[2]] = ["opponent", rps]
-                else:
-                    # if this token lose, then take this token away from the state
-                    pass
-        else:
-            # rps means whether the token is rock/paper/scissors
-            # if the action is not throw, the rps has been recorded before
-            previous_loc = opponent_action[1]
-            rps = (prev_state_record[previous_loc])[1]
-            if opponent_action[2] not in self.state:
-                loc = {opponent_action[2]: ["opponent", rps]}
-                self.state.update(loc)
-            else:
-                # if another token occupy the same place, need to check which token wins
-                old_rps = (self.state[opponent_action[2]])[1]
-                if if_defeat(rps, old_rps):
-                    self.state[opponent_action[2]] = ["opponent", rps]
-                else:
-                    # if this token lose, then take this token away from the state
-                    pass
+            ####################################################################################################
+            # player and opponent go to same destination
+            if opponent_destination == player_destination:
+                # check how many symbols
+                symbols = set()
+                symbols.add(player_symbol)
+                symbols.add(opponent_symbol)
+                if opponent_destination in self.state:
+                    symbols.add(self.state[opponent_destination][0][1])
 
+                # 3 different symbols occupying 1 hex
+                if len(symbols) == 3:
+                    del self.state[opponent_destination]
+                # !!!!有问题， Jupyter有报错！！！！！！！！！！！！！！！！！！！暂时不知道哪里错了
+                # 2 different symbols occupying 1 hex
+                elif len(symbols) == 2:
+                    if opponent_symbol == player_symbol:
+                        # opponent and player remain in that hex
+                        if if_defeat(player_symbol, self.state[player_destination][0][1]) == "WIN":
+                            self.win += 1
+                            for item in self.state[opponent_destination]:
+                                if item[0] == "opponent":
+                                    self.win += 1  # player token eat opponent token
+                                else:
+                                    self.loss += 1  # player token eat player token
+                            self.state[opponent_destination] = [
+                                ["player", player_symbol], ["opponent", opponent_symbol]]
+                        # opponent and player both been defeated
+                        else:
+                            pass
+
+                    elif opponent_symbol == self.state[opponent_destination][0][1]:
+                        # opponent and another remain in that hex
+                        if if_defeat(opponent_symbol, player_symbol) == "WIN":
+                            
+                            self.loss += 1  
+                            self.state[opponent_destination].append(
+                                ["opponent", opponent_symbol])
+                        # player remain in that hex
+                        else:
+                            self.win += 1
+                            for item in self.state[opponent_destination]:
+                                if item[0] == "opponent":
+                                    self.win += 1  # player token eat opponent token
+                                else:
+                                    self.loss += 1
+                            self.state[player_destination] = [
+                                ["player", player_symbol]]
+                    elif player_symbol == self.state[opponent_destination][0][1]:
+                        # opponent and another remain in that hex
+                        if if_defeat(player_symbol, opponent_symbol) == "WIN":
+                            self.win += 1
+                            self.state[player_destination].append(
+                                ["player", player_symbol])
+                        # player remain in that hex
+                        else:
+                            self.loss += 1
+                            for item in self.state[opponent_destination]:
+                                if item[0] == "player":
+                                    self.loss += 1  # player token eat opponent token
+                               
+                            self.state[opponent_destination] = [
+                                ["opponent", opponent_symbol]]
+
+                # opponent, player and destination token all have same symbol
+                else:
+                    self.state[player_destination].append(
+                        ["player", player_symbol])
+                    self.state[opponent_destination].append(
+                        ["opponent", opponent_symbol])
+
+            # player and opponent actions are not "THROW" then update prev state and delete from current state
+            prev_state_record = {}  # ?????????????????????????????只记录上一轮的位置吗？？？？？？？？每次update（）都变成空？
+            # player_action is ("SLIDE or SWING", (x1, y1), (x2, y2))
+            if player_action[0] != "THROW":
+                loc = {player_action[1]: self.state[player_action[1]]}
+                if player_action[1] in prev_state_record:
+                    prev_state_record[player_action[1]].append(["player", player_symbol]) 
+                else:
+                    prev_state_record.update(loc)
+                if len(self.state[player_action[1]]) == 1:
+                    del self.state[player_action[1]]
+                else:
+                    self.state[player_action[1]].remove(["player", player_symbol])
+
+            # opponent_action is ("SLIDE or SWING", (x1, y1), (x2, y2))
+            if opponent_action[0] != "THROW":
+                loc = {opponent_action[1]: self.state[opponent_action[1]]}
+                if opponent_action[1] in prev_state_record:
+                    prev_state_record[opponent_action[1]].append(["opponent", opponent_symbol]) 
+                else:
+                    prev_state_record.update(loc)
+                if len(self.state[opponent_action[1]]) == 1:
+                    del self.state[opponent_action[1]]
+                else:
+                    self.state[opponent_action[1]].remove(
+                        ["opponent", opponent_symbol])
+
+            ####################################################################################################
+            # player and opponent go to different destinations
+
+            # consider the movement in this turn
+            # idea: 若是throw说明之前没在state里出现过 只要考虑它要放的位置需不需要和别的token battle，
+            # 赢了则在state里把这个位置改为这个token的信息，输了则不在state记入这个token, 相同则加进去value里
+            # 若不是throw，则可以通过原位置在prev_state_record里找到相应的信息，在判断要放的位置是否需要和别的token battle
+            # battle -> 赢了则在state里把这个位置改为这个token的信息，输了则不在state记入这个token
+            # (因为最开始都把本轮要move的token的原位置在state里删掉了，只是在prev_state_record里有
+            if opponent_destination != player_destination:
+                if player_action[0] == "THROW":
+                    # key not in state then add key value pair
+                    if player_destination not in self.state:
+                        loc = {player_destination: [["player", player_symbol]]}
+                        self.state.update(loc)
+                    # key in state then 1.defeat 2.couldn't defeat 3.draw
+                    else:
+                        # if another token occupy the same place, need to check which token wins or draw
+                        # 's' or 'r' or 'p' in the state including both players
+                        occypiedHex_symbol = (self.state[player_destination])[0][1]
+                        if if_defeat(player_symbol, occypiedHex_symbol) == "WIN":
+                            for item in self.state[player_destination]:
+                                if item[0] == "opponent":
+                                    self.win += 1  # player token eat opponent token
+                                else:
+                                    self.loss += 1  # player token eat player token
+                            self.state[player_destination] = [
+                                ["player", player_symbol]]
+                        elif if_defeat(player_symbol, occypiedHex_symbol) == "DRAW":
+                            self.state[player_destination].append(
+                                ["player", player_symbol])
+                        else:
+                            self.loss += 1  # player token eat player token
+                            # if this token lose, then take this token away from the state
+                            
+
+                # player action is not "THROW"
+                else:
+                    # if the action is not throw, the rps has been recorded before  #player_action is ("SLIDE or SWING", (x1, y1), (x2, y2))
+                    previous_loc = player_action[1]  # (x1, y1)
+                    # rps is 's' or 'p' or 'r'  #要移动过去的棋子的标志 rps
+                    rps = (prev_state_record[previous_loc])[0][1]
+
+                    if player_destination not in self.state:
+                        loc = {player_action[2]: [["player", rps]]}
+                        self.state.update(loc)
+                    else:
+                        # if >=1 tokens occupy the same place, need to check which token wins or draw
+                        if if_defeat(rps, self.state[player_action[2]][0][1]) == "DRAW":
+                            self.state[player_action[2]].append(["player", rps])
+                        elif if_defeat(rps, self.state[player_action[2]][0][1]) == "WIN":
+                            for item in self.state[player_destination]:
+                                if item[0] == "opponent":
+                                    self.win += 1  # player token eat opponent token
+                                else:
+                                    self.loss += 1
+                            self.state[player_action[2]] = [["player", rps]]
+                        else:
+                            self.loss += 1  # player token eat player token
+        #                 old_rps = (self.state[player_action[2]])[1] #现在占着的棋子 我方或敌方 的标志
+        #                 if if_defeat(rps, old_rps):
+        #                     self.state[player_action[2]] = ["player", rps]
+        #                 else:
+        #                     # if this token lose, then take this token away from the state
+        #                     pass
+
+                # update opponent action
+                if opponent_action[0] == "THROW":
+                    if opponent_destination not in self.state:
+                        loc = {opponent_destination: [
+                            ["opponent", opponent_symbol]]}
+                        self.state.update(loc)
+                    else:
+                        # if another token occupy the same place, need to check which token wins
+                        occypiedHex_symbol = (
+                            self.state[opponent_destination])[0][1]
+                        if if_defeat(opponent_symbol, occypiedHex_symbol) == "WIN":
+                            for item in self.state[opponent_destination]:
+                                if item[0] == "player":
+                                    self.loss += 1  # player token eat opponent token
+                                else:
+                                    self.win += 1  # player token eat player token
+                            self.state[opponent_destination] = [
+                                ["opponent", opponent_symbol]]
+                        elif if_defeat(opponent_symbol, occypiedHex_symbol) == "DRAW":
+                            self.state[opponent_destination].append(
+                                ["opponent", opponent_symbol])
+                        else:
+                            self.win += 1
+                            # if this token lose, then take this token away from the state
+                            pass
+
+                # opponent not "THROW"
+                else:
+                    # rps means whether the token is rock/paper/scissors
+                    # if the action is not throw, the rps has been recorded before
+                    previous_loc = opponent_action[1]
+                    if opponent_destination not in self.state:
+                        loc = {opponent_destination: [
+                            ["opponent", opponent_symbol]]}
+                        self.state.update(loc)
+                    else:
+                        # if another token occupy the same place, need to check which token wins
+                        occypiedHex_symbol = (
+                            self.state[opponent_destination])[0][1]
+                        if if_defeat(opponent_symbol, occypiedHex_symbol) == "WIN":
+                            for item in self.state[opponent_destination]:
+                                if item[0] == "player":
+                                    self.loss += 1  # player token eat opponent token
+                                else:
+                                    self.win += 1
+                            self.state[opponent_destination] = [
+                                ["opponent", opponent_symbol]]
+                        elif if_defeat(opponent_symbol, occypiedHex_symbol) == "DRAW":
+                            
+                            self.state[opponent_destination].append(
+                                ["opponent", opponent_symbol])
+                        else:
+                            # if this token lose, then take this token away from the state
+                            self.win += 1
 
 def possible_move(state, current_pos, player_or_opponent_list, the_other_list):
     # if player_or_opponent_list is player_list, then the_other_list is opponent_List, vice versa
