@@ -177,47 +177,47 @@ class Player:
                         # opponent and player both been defeated
                         else:
                             pass
-
-                    elif opponent_symbol == self.state[opponent_destination][0][1]:
-                        # opponent and another remain in that hex
+                    elif opponent_symbol !=player_symbol:
                         if if_defeat(opponent_symbol, player_symbol) == "WIN":
-                            
-                            self.loss += 1  
-                            self.state[opponent_destination].append(
-                                ["opponent", opponent_symbol])
-                        # player remain in that hex
-                        else:
-                            self.win += 1
-                            for item in self.state[opponent_destination]:
-                                if item[0] == "opponent":
-                                    self.win += 1  # player token eat opponent token
-                                else:
-                                    self.loss += 1
-                            self.state[player_destination] = [
-                                ["player", player_symbol]]
-                    elif player_symbol == self.state[opponent_destination][0][1]:
-                        # opponent and another remain in that hex
-                        if if_defeat(player_symbol, opponent_symbol) == "WIN":
-                            self.win += 1
-                            self.state[player_destination].append(
-                                ["player", player_symbol])
-                        # player remain in that hex
-                        else:
                             self.loss += 1
-                            for item in self.state[opponent_destination]:
-                                if item[0] == "player":
-                                    self.loss += 1  # player token eat opponent token
-                               
-                            self.state[opponent_destination] = [
-                                ["opponent", opponent_symbol]]
+                            if opponent_destination in self.state and if_defeat(opponent_symbol, self.state[opponent_destination][0][1]) == "WIN":
+                                for item in self.state[opponent_destination]:
+                                    if item[0] == "player":
+                                        self.loss+= 1  
+                                    else:
+                                        self.win += 1  
+                                self.state[opponent_destination] = [["opponent", opponent_symbol]]
+                            elif opponent_destination in self.state and if_defeat(opponent_symbol, self.state[opponent_destination][0][1]) != "WIN":
+                                self.state[opponent_destination].append(["opponent", opponent_symbol])
+                            elif opponent_destination not in self.state:
+                                self.state[opponent_destination] = [["opponent", opponent_symbol]]
+                                
+                            
+                        if if_defeat(opponent_symbol, player_symbol) == "LOSE":
+                            self.win += 1
+                            if player_destination in self.state and if_defeat(player_symbol, self.state[player_destination][0][1]) == "WIN":
+                                for item in self.state[player_destination]:
+                                    if item[0] == "opponent":
+                                        self.win += 1  # player token eat opponent token
+                                    else:
+                                        self.loss += 1  # player token eat player token
+                                self.state[player_destination] = [["player", player_symbol]]
+                            elif player_destination in self.state and if_defeat(player_symbol, self.state[playre_destination][0][1]) != "WIN":
+                                self.state[player_destination].append(["player", player_symbol])
+                            elif player_destination not in self.state:
+                                self.state[player_destination] = [["player", player_symbol]]
 
                 # opponent, player and destination token all have same symbol
                 else:
-                    self.state[player_destination].append(
-                        ["player", player_symbol])
-                    self.state[opponent_destination].append(
-                        ["opponent", opponent_symbol])
-
+                    if player_destination in self.state:
+                        
+                        self.state[player_destination].append(
+                            ["player", player_symbol])
+                        self.state[opponent_destination].append(
+                            ["opponent", opponent_symbol])
+                    else:
+                        self.state[player_destination]=[["player", player_symbol], ["opponent", opponent_symbol]]
+                        
             # player and opponent actions are not "THROW" then update prev state and delete from current state
             prev_state_record = {}  # ?????????????????????????????只记录上一轮的位置吗？？？？？？？？每次update（）都变成空？
             # player_action is ("SLIDE or SWING", (x1, y1), (x2, y2))
@@ -242,8 +242,7 @@ class Player:
                 if len(self.state[opponent_action[1]]) == 1:
                     del self.state[opponent_action[1]]
                 else:
-                    self.state[opponent_action[1]].remove(
-                        ["opponent", opponent_symbol])
+                    self.state[opponent_action[1]].remove(["opponent", opponent_symbol])
 
             ####################################################################################################
             # player and opponent go to different destinations
