@@ -79,11 +79,17 @@ class Player:
 
         # store all possible throw actions for player and opponent -- cut out undefeatble possible throw already
         # possible_throw_player = [["THROW", 's', (coor)]]
-        possible_throw_player = possible_throw(
-            current_state, board, r0, throw_range, "player")
-        possible_throw_opponent = possible_throw(
-            current_state, board, r0_opp, throw_range_opp, "opponent")
-
+        if self.throw > 0:
+            possible_throw_player = possible_throw(
+                current_state, board, r0, throw_range, "player")
+        else:
+            possible_throw_player = []
+        if self.oppo_throw > 0:
+            possible_throw_opponent = possible_throw(
+                current_state, board, r0_opp, throw_range_opp, "opponent")
+        else:
+            possible_throw_opponent = []
+            
 #         print("possible_throw_player", possible_throw_player)
 #         print("possible_throw_opponent", possible_throw_opponent)
         # player_total = [[...],[...]]     stores all possible actions for player and opponent: slide, swing, throw
@@ -124,6 +130,8 @@ class Player:
             # print("current_state2222:",current_state)
             # print("self2222:",self.state)
         self.player_action = best_move
+        if self.player_action[0] == "THROW":
+            self.throw -= 1
         return tuple(self.player_action)
 
         # [[1,2],[2,3]]
@@ -149,8 +157,6 @@ class Player:
 
         # get symbols for opponent and player
         if player_action[0] == "THROW":
-            if self.throw >= 0:
-                self.throw -= 1
             player_symbol = player_action[1]
         else:
             # if more than one token in a hex , they must have the same symbol

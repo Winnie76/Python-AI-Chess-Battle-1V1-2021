@@ -46,6 +46,8 @@ class Player:
         """
         # put your code here
         current_state = copy.deepcopy(self.state)
+        no_throw = copy.deepcopy(self.throw)
+        no_oppo_throw = copy.deepcopy(self.oppo_throw)
 #        current_state = {}
 #        for key in self.state:
 #            for element in self.state[key]:
@@ -80,85 +82,64 @@ class Player:
             
     
 
-#         print("throw_range", throw_range)
-#         print("throw_range_opp", throw_range_opp)
-
         # store all possible throw actions for player and opponent -- cut out undefeatble possible throw already
         # possible_throw_player = [["THROW", 's', (coor)]]
         possible_throw_player = possible_throw(
             current_state, board, r0, throw_range, "player")
         possible_throw_opponent = possible_throw(
             current_state, board, r0_opp, throw_range_opp, "opponent")
-
-#         print("possible_throw_player", possible_throw_player)
-#         print("possible_throw_opponent", possible_throw_opponent)
+        
         # player_total = [[...],[...]]     stores all possible actions for player and opponent: slide, swing, throw
         # for player
         player_total = []
+        
         if self.throw < 5:
             for item in player_list:
                 ol = possible_move(current_state, item,
                                    player_list, opponent_list, board)
                 for each in ol:
                     player_total.append(each)
+                    
         player_total += possible_throw_player
 
         # for opponent
         opp_total = []
+        
         if self.oppo_throw < 5:
             for opp in opponent_list:
                 opp_ol = possible_move(
                     current_state, opp, opponent_list, player_list, board)
                 for each in opp_ol:
                     opp_total.append(each)
+                    
         opp_total += possible_throw_opponent
 
         # build min_max tree
         max_layer = []
         min_max = -10000
-#         print("bf minmax current state", current_state)
         final_player_action = copy.deepcopy(player_total[0])
-#        print("player_total", player_total)
         for action in player_total:
             #print("action is----------------------------",action)
-            # print(opp_total)
             min_layer = []
-#             print("action in player_total", action)
             for opp_action in opp_total:
-                #print("action in oppo_total", opp_action)
-                #                 print("current state before Player_update", current_state)
                 self.update(opp_action, action)  # 如果再来一轮 ，应该从这里加入, 感觉可以再加一层）
-#                 print("after  Player.update(self, action, opp_action) current state is", current_state)
-#                 print("after  Player.update(self, action, opp_action) self state is", self.state)
                 eval_score = evaluation(
                     self.state, self.player, self.win, self.loss, player_list, opponent_list, board)
-#                 print("after eval_score = evaluation(self.sta...) current state is", current_state)
-                #print("eval score", eval_score)
                 self.state = copy.deepcopy(current_state)
-#                 print("\n\n\n\nafter self.state = current_state, self state is", self.state)
-#                 print("\n\n\n\nafter self.state = current_state, current_state is", current_state)
-#                 print("\n\n\n")
-                # print("action:",action)
-                # print("min_action",final_player_action)
-                # print(eval_score)
+                self.throw = copy.deepcopy(no_throw)
+                self.oppo_throw = copy.deepcopy(no_oppo_throw)
                 if eval_score > min_max:
                     min_layer.append(eval_score)
 #                     self.state = current_state
-#                     print("eval score > min_mac then self state = current state", current_state)
                     # 说明这个predecessor下面的node都大于之前的max_min => max_min更改
                     if opp_action == opp_total[-1]:
                         min_max = min(min_layer)  # update min_max
                         # update player_action leads to the state with min_max
                         final_player_action = copy.deepcopy(action)
-#                         print("self.player_action = action", eval_score)
                 else:
-                    #                     print("eval score < min_mac then self state = current state", current_state)
                     break
             max_layer.append(min_layer)
-#        print(max_layer)
-            #print(action, min_max)
-        # print(self.player_action)
-#         print("self.player_action", self.player_action)
+            
         # if self.player_action[0] == "THROW" and self.throw >= 0:
         #    self.throw -= 1
 
@@ -168,9 +149,6 @@ class Player:
 
         # 加入pruning
         # 加入后续判断
-        # def evaluation function没写
-        # def 方位辨别找min dist没写
-        # 换了board limit 方便找能thorw的位置， 记得把possible move里面加上if在board的条件
 
     def update(self, opponent_action, player_action):
         """
@@ -664,8 +642,8 @@ def evaluation(state, which_side, no_defeat, no_loss, player_or_opponent_list, t
                 for coor_i in state.keys():
                     if coor_i != coor:
                         for other_token in state[coor_i]:
-                            # found token that is also player and has differnent symbol
-                            if other_token[0] == 'player' and if_defeat(other_token[1], state[coor][token_i][1]) != "DRAW":
+                            # found token that is also player and has differnent symbol --> player going to protect other token
+                            if other_token[0] == 'player' and if_defeat(other_token[1], state[coor][token_i][1]) == "LOSE":
                                 distance = least_distance(
                                     state, coor, coor_i, player_or_opponent_list, the_other_list, board)
                                 if distance == 1:
@@ -747,10 +725,10 @@ def evaluation(state, which_side, no_defeat, no_loss, player_or_opponent_list, t
             else:
                 opponent_p += 1
     if (player_s == 0) & (opponent_p != 0):
-        eval_score -= 100
+        eval_score -= 1
     elif (player_r == 0) & (opponent_s != 0):
-        eval_score -= 100
+        eval_score -= 1
     elif (player_p == 0) & (opponent_r != 0):
         #        print("\\\\\\")
-        eval_score -= 100
+        eval_score -= 1
     return eval_score

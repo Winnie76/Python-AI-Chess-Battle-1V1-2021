@@ -52,11 +52,12 @@ class Player:
         of the game, select an action to play this turn.
         """
         # put your code here
-        current_state = copy.deepcopy(self.state)
 
         board = self.board
         r0 = self.r0
-
+        r0_opp = -r0
+        best_move = ()
+        current_state = copy.deepcopy(self.state)
         # existing player and oppo in the state
         # player_list = {(coor):['r', 's'], (coor):['p']}
         player_list = token_list(current_state, "player")
@@ -78,9 +79,11 @@ class Player:
 
         # store all possible throw actions for player and opponent -- cut out undefeatble possible throw already
         # possible_throw_player = [["THROW", 's', (coor)]]
-        possible_throw_player = possible_throw(
-            current_state, board, r0, throw_range, "player")
-
+        if self.throw > 0:
+            possible_throw_player = possible_throw(
+                current_state, board, r0, throw_range, "player")
+        else:
+            possible_throw_player = []
         player_total = []
 
         for item in player_list:
@@ -96,6 +99,8 @@ class Player:
         i = random.randrange(0, no_action, 1)
         self.player_action = tuple(player_total[i])
         
+        if self.player_action[0] == "THROW":
+            self.throw -= 1
         return self.player_action
 
     def update(self, opponent_action, player_action):
