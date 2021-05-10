@@ -2,10 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="7cb09bc7-a1fa-4ed4-b2f9-025248e90aab" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/check_whole_game.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/check_whole_game.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/double minimax.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/double minimax.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/greedy_action.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/greedy_action.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/random_action.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/random_action.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/random/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/random_action/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/random/player.py" beforeDir="false" afterPath="$PROJECT_DIR$/random_action/player.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -34,5 +33,17 @@
       <updated>1620621246047</updated>
     </task>
     <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="oldMeFiltersMigrated" value="true" />
   </component>
 </project>
