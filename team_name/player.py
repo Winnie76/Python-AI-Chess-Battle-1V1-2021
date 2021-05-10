@@ -29,14 +29,10 @@ class Player:
         self.board = [(4, -4), (4, -3), (4, -2), (4, -1), (4, 0),
                       (3, -4), (3, -3), (3, -2), (3, -1), (3, 0), (3, 1),
                       (2, -4), (2, -3), (2, -2), (2, -1), (2, 0), (2, 1), (2, 2),
-                      (1, -4), (1, -3), (1, -2), (1, -
-                                                  1), (1, 0), (1, 1), (1, 2), (1, 3),
-                      (0, -4), (0, -3), (0, -2), (0, -1), (0,
-                                                           0), (0, 1), (0, 2), (0, 3), (0, 4),
-                      (-1, -3), (-1, -2), (-1, -1), (-1,
-                                                     0), (-1, 1), (-1, 2), (-1, 3), (-1, 4),
-                      (-2, -2), (-2, -1), (-2, 0), (-2,
-                                                    1), (-2, 2), (-2, 3), (-2, 4),
+                      (1, -4), (1, -3), (1, -2), (1, -1), (1, 0), (1, 1), (1, 2), (1, 3),
+                      (0, -4), (0, -3), (0, -2), (0, -1), (0,0), (0, 1), (0, 2), (0, 3), (0, 4),
+                      (-1, -3), (-1, -2), (-1, -1), (-1,0), (-1, 1), (-1, 2), (-1, 3), (-1, 4),
+                      (-2, -2), (-2, -1), (-2, 0), (-2,1), (-2, 2), (-2, 3), (-2, 4),
                       (-3, -1), (-3, 0), (-3, 1), (-3, 2), (-3, 3), (-3, 4),
                       (-4, 0), (-4, 1), (-4, 2), (-4, 3), (-4, 4)]
 
@@ -70,11 +66,19 @@ class Player:
 #         print("player_list", player_list)
 
         character = ["s", "p", "r"]
-
-        # if player could throw 2 lines --> line 4 and line 3, then throw range is 2 !
-        throw_range = r0 + (9 - self.throw + 1) * self.throw_row_direction
-        throw_range_opp = r0_opp + \
+    
+        if self.throw <= 0:
+            throw_range = r0
+        else:
+            # if player could throw 2 lines --> line 4 and line 3, then throw range is 2 !
+            throw_range = r0 + (9 - self.throw + 1) * self.throw_row_direction
+        if self.oppo_throw <= 0:
+            throw_range_opp = r0_opp
+        else:
+            throw_range_opp = r0_opp + \
             (9 - self.oppo_throw + 1) * (- self.throw_row_direction)
+            
+    
 
 #         print("throw_range", throw_range)
 #         print("throw_range_opp", throw_range_opp)
@@ -91,20 +95,22 @@ class Player:
         # player_total = [[...],[...]]     stores all possible actions for player and opponent: slide, swing, throw
         # for player
         player_total = []
-        for item in player_list:
-            ol = possible_move(current_state, item,
-                               player_list, opponent_list, board)
-            for each in ol:
-                player_total.append(each)
+        if self.throw < 5:
+            for item in player_list:
+                ol = possible_move(current_state, item,
+                                   player_list, opponent_list, board)
+                for each in ol:
+                    player_total.append(each)
         player_total += possible_throw_player
 
         # for opponent
         opp_total = []
-        for opp in opponent_list:
-            opp_ol = possible_move(
-                current_state, opp, opponent_list, player_list, board)
-            for each in opp_ol:
-                opp_total.append(each)
+        if self.oppo_throw < 5:
+            for opp in opponent_list:
+                opp_ol = possible_move(
+                    current_state, opp, opponent_list, player_list, board)
+                for each in opp_ol:
+                    opp_total.append(each)
         opp_total += possible_throw_opponent
 
         # build min_max tree
@@ -187,14 +193,14 @@ class Player:
 
         # get symbols for opponent and player
         if player_action[0] == "THROW":
-            if self.throw >= 0:
+            if self.throw > 0:
                 self.throw -= 1
             player_symbol = player_action[1]
         else:
             # if more than one token in a hex , they must have the same symbol
             player_symbol = self.state[player_action[1]][0][1]
         if opponent_action[0] == "THROW":
-            if self.oppo_throw >= 0:
+            if self.oppo_throw > 0:
                 self.oppo_throw -= 1
             opponent_symbol = opponent_action[1]
         else:
@@ -501,9 +507,7 @@ def if_ol_append(state, item, token, ol, method, the_other_list, board):
     if tuple(item) not in board:
         return ol
     else:
-        # if item not in ol_pos:  # to avoid double record
-        # ??????????????? 我comment掉了上面条件， 因为这个判断的是（coordinate）在不在 ol 里，
-        # ????????????????但如果一个slide一个throw分数eval_score可能不一样，而且想尽量保留着throw
+
         if tuple(item) in state:
             if tuple(item) in the_other_list:
                 t2 = state[tuple(item)][0][1]  # whether s/p/r
