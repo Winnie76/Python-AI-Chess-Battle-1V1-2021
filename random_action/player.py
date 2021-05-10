@@ -63,9 +63,16 @@ class Player:
 
 
 #        character = ["s", "p", "r"]
-
-        # if player could throw 2 lines --> line 4 and line 3, then throw range is 2 !
-        throw_range = r0 + (9 - self.throw + 1) * self.throw_row_direction
+        if self.throw <= 0:
+            throw_range = r0
+        else:
+            # if player could throw 2 lines --> line 4 and line 3, then throw range is 2 !
+            throw_range = r0 + (9 - self.throw + 1) * self.throw_row_direction
+#         if self.oppo_throw <= 0:
+#             throw_range_opp = r0_opp
+#         else:
+#             throw_range_opp = r0_opp + \
+#             (9 - self.oppo_throw + 1) * (- self.throw_row_direction)
 #         print("throw_range", throw_range)
 #         print("throw_range_opp", throw_range_opp)
 
