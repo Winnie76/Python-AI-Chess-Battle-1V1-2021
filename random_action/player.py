@@ -88,6 +88,7 @@ class Player:
 #         print(player_total)
         i = random.randrange(0, no_action, 1)
         self.player_action = tuple(player_total[i])
+        
         return self.player_action
 
     def update(self, opponent_action, player_action):
@@ -450,7 +451,7 @@ def possible_throw(state, board, r0, throw_range, who):
     for row in range(r0, throw_range, reverse):  # -4, -3, -2, -1 or 4, 3, 2, 1(reverse)
         #         print("r0, throw_range", r0, throw_range)
         for item in board:
-            if item[0] == row:
+            if item[0] == row and item not in state:
                 for char in character:
                     item_format = ["THROW", char, item]
                     possible_throw_list.append(item_format)
