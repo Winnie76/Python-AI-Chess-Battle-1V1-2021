@@ -51,6 +51,7 @@ class Player:
         current_state = copy.deepcopy(self.state)
         no_throw = copy.deepcopy(self.throw)
         no_oppo_throw = copy.deepcopy(self.oppo_throw)
+        print("current_state initial",current_state)
 #        current_state = {}
 #        for key in self.state:
 #            for element in self.state[key]:
@@ -164,6 +165,7 @@ class Player:
                 player_new_no_throw = copy.deepcopy(self.throw)
                 opponent_new_no_throw = copy.deepcopy(self.oppo_throw)
                 
+ #               print("current_new_state initial", current_new_state)
                 # existing player and oppo in the state
                 player_new_list = token_list(current_new_state, "player")
                 opponent_new_list = token_list(current_new_state, "opponent")
@@ -211,7 +213,7 @@ class Player:
                     opp_new_total = opp_new_total[0:10]
                 
                  # reorder the move of player for improving pruning
-                copy_current_new_state = copy.deepcopy(current_state)
+                copy_current_new_state = copy.deepcopy(current_new_state)
                 player_new_total = reorder_move(player_new_total, copy_current_new_state, 
                                     self.player, player_new_list, opponent_new_list, board, "player")
                 
@@ -268,7 +270,6 @@ class Player:
                     #min_layer1.append(min_max)
                     break
 
-
             max_layer1.append(min_layer1)
         print(max_layer1)
         # decide action of first round minimax
@@ -278,7 +279,7 @@ class Player:
 #                final_player_action = player_total[i]         
 #        print(player_total)
 #        print("min_max",min_max1)
-#        print(current_state)
+        print(current_state)
         return tuple(final_player_action)
 
 
@@ -905,10 +906,10 @@ def update_player_action(player_action, current_state, who): #前面记得把no_
         if len(current_state[player_action[1]]) == 1:
             del current_state[player_action[1]]
         else:
-            print("here notice", current_state)
-            print("\n")
-            print(player_action)
-            print(symbol)
+ #           print("here notice", current_state)
+ #           print("\n")
+ #           print(player_action)
+#            print(symbol)
             current_state[player_action[1]].remove([who, symbol])
     
     if player_action[0] == "THROW":
