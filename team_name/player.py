@@ -1,5 +1,5 @@
 import copy
-
+import time
 
 class Player:
     def __init__(self, player):
@@ -13,6 +13,7 @@ class Player:
         # put your code here
         self.player = player
         self.opponent = ""
+        self.time = 0.0
         if self.player == "lower":
             self.opponent == "upper"
             self.r0 = -4
@@ -48,6 +49,7 @@ class Player:
         of the game, select an action to play this turn.
         """
         # put your code here
+        start_time = time.time()
         current_state = copy.deepcopy(self.state)
         no_throw = copy.deepcopy(self.throw)
         no_oppo_throw = copy.deepcopy(self.oppo_throw)
@@ -139,10 +141,13 @@ class Player:
                                     self.opponent, opponent_list, player_list, board, "opponent")
         if len(player_total) > 6:
             player_total = player_total[0:6]
-
+        
         if len(opp_total) > 6:
             opp_total = opp_total[0:6]
-#        print("current_state",current_state)
+            
+        if self.time > 55.0:
+            return player_total[0]
+        
         # build min_max tree
         max_layer1 = []
         min_max1 = -10000
@@ -281,6 +286,8 @@ class Player:
 #        print(player_total)
 #        print("min_max",min_max1)
 #        print(current_state)
+        end_time = time.time()
+        self.time += end_time - start_time
         return tuple(final_player_action)
 
 
@@ -870,7 +877,7 @@ def least_distance(state, token1, token2, player_or_opponent_list, the_other_lis
 
 
 def evaluation(state, which_side, no_defeat, no_loss, player_or_opponent_list, the_other_list, board):
-    eval_score = 1000 * (no_defeat - no_loss)
+    eval_score = 10000 * (no_defeat - no_loss)
 
     for coor in state.keys():
         # 1.same coordinate player defeat opponent 2.same coordinate opponent defeat player
@@ -939,21 +946,21 @@ def evaluation(state, which_side, no_defeat, no_loss, player_or_opponent_list, t
                                 distance = least_distance(
                                     state, coor, coor_i, player_or_opponent_list, the_other_list, board)
                                 if distance == 1:
-                                    eval_score += -8
+                                    eval_score += -80
                                 elif distance == 2:
-                                    eval_score += -7
+                                    eval_score += -70
                                 elif distance == 3:
-                                    eval_score += -6
+                                    eval_score += -60
                                 elif distance == 4:
-                                    eval_score += -5
+                                    eval_score += -50
                                 elif distance == 5:
-                                    eval_score += -4
+                                    eval_score += -40
                                 elif distance == 6:
-                                    eval_score += -3
+                                    eval_score += -30
                                 elif distance == 7:
-                                    eval_score += -2
+                                    eval_score += -20
                                 elif distance == 8:
-                                    eval_score += -1
+                                    eval_score += -10
                 # 6.how close are player's token towards our side
                 if which_side == 'upper':
                     if coor[0] == 4:
@@ -1000,14 +1007,13 @@ def evaluation(state, which_side, no_defeat, no_loss, player_or_opponent_list, t
                 opponent_r += 1
             else:
                 opponent_p += 1
-    eval_score += (player_s - opponent_p + player_r - opponent_s + player_p - opponent_r) * 10000
-    #     if (player_s == 0) & (opponent_p != 0):
-    #         eval_score -= 1
-    #     elif (player_r == 0) & (opponent_s != 0):
-    #         eval_score -= 1
-    #     elif (player_p == 0) & (opponent_r != 0):
-    #         #        print("\\\\\\")
-    #         eval_score -= 1
+    #eval_score += (player_s - opponent_p + player_r - opponent_s + player_p - opponent_r) * 10000
+    if (player_s - opponent_p) >= 2:
+        eval_score -=  1000
+    if (player_r - opponent_s) >= 2:
+        eval_score -=  1000
+    if (player_p - opponent_r) >= 2:
+        eval_score -=  1000
     return eval_score
 
 def update_player_action(player_action, current_state, who): #前面记得把no_defeat和loss归0
