@@ -137,11 +137,11 @@ class Player:
         
         opp_total = reorder_move(opp_total, copy_current_state, 
                                     self.opponent, opponent_list, player_list, board, "opponent")
-        if len(player_total) > 10:
-            player_total = player_total[0:10]
+        if len(player_total) > 6:
+            player_total = player_total[0:6]
 
-        if len(opp_total) > 10:
-            opp_total = opp_total[0:10]
+        if len(opp_total) > 6:
+            opp_total = opp_total[0:6]
 #        print("current_state",current_state)
         # build min_max tree
         max_layer1 = []
@@ -197,11 +197,9 @@ class Player:
                             player_new_total.append(each)
                     
                 player_new_total += new_possible_throw_player
-                
-                if len(player_new_total) > 10:
-                    player_new_total = player_new_total[0:10]
 #               print("player_new_total", player_new_total)
                 # for opponent
+
                 opp_new_total = []
         
                 if opponent_new_no_throw < 7:
@@ -212,9 +210,6 @@ class Player:
                             opp_new_total.append(each)
                     
                 opp_new_total += new_possible_throw_opponent
-                
-                if len(opp_new_total) > 10:
-                    opp_new_total = opp_new_total[0:10]
                 
                  # reorder the move of player for improving pruning
                 copy_current_new_state = copy.deepcopy(current_new_state)
