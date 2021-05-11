@@ -3,6 +3,8 @@
   <component name="ChangeListManager">
     <list default="true" id="7cb09bc7-a1fa-4ed4-b2f9-025248e90aab" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/greedy/player.py" beforeDir="false" afterPath="$PROJECT_DIR$/greedy/player.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/random_action/player.py" beforeDir="false" afterPath="$PROJECT_DIR$/random_action/player.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/team_name/player.py" beforeDir="false" afterPath="$PROJECT_DIR$/team_name/player.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />

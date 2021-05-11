@@ -222,10 +222,10 @@ class Player:
                                     self.opponent, opponent_new_list, player_new_list, board, "opponent")
                 
                 # limit the branch expand
-                if len(player_new_total) > 10:
-                    player_new_total = player_new_total[0:10]
-                if len(opp_new_total) > 10:
-                    opp_new_total = opp_new_total[0:10]
+                if len(player_new_total) > 6:
+                    player_new_total = player_new_total[0:6]
+                if len(opp_new_total) > 6:
+                    opp_new_total = opp_new_total[0:6]
                 
                 min_max = -10000
                 for new_action in player_new_total:

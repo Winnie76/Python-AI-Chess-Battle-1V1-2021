@@ -49,6 +49,7 @@ class Player:
         of the game, select an action to play this turn.
         """
         # put your code here
+        print("no_throw", self.throw)
         board = self.board
         r0 = self.r0
         r0_opp = -r0
@@ -112,11 +113,13 @@ class Player:
         opp_total += possible_throw_opponent
 
         max_eval = 0
+        best_move = player_total[0]
         for item in player_total:
             current_state = copy.deepcopy(self.state)
             # print("current_state0000:",current_state)
             # print("self0000:",self.state)
-            list_of_result = update_player_action(item, current_state)
+
+            list_of_result = update_player_action(item, self.state)
             # print("current_state1111:",current_state)
             # print("self1111:",self.state)
             new_state = list_of_result[0]
@@ -129,6 +132,7 @@ class Player:
                 best_move = item
             # print("current_state2222:",current_state)
             # print("self2222:",self.state)
+            self.state = copy.deepcopy(current_state)
         self.player_action = best_move
         if self.player_action[0] == "THROW":
             self.throw -= 1
@@ -502,6 +506,7 @@ def if_defeat(new, old):
 def possible_throw(state, board, r0, throw_range, who):
     character = ["r", "s", "p"]
     possible_throw_list = []
+
     if r0 == 4:
         reverse = -1
     else:
@@ -602,15 +607,14 @@ def least_distance(state, token1, token2, player_or_opponent_list, the_other_lis
 
 
 def evaluation(state, which_side, no_defeat, no_loss, player_or_opponent_list, the_other_list, board):
-    # 可以把previous state带入 看双方tokens变化，如果上一轮有的是一轮没有说明被吃掉了，不能只看token数量变化 因为可能被吃掉的一方正好throw
+    eval_score = 1000 * (no_defeat - no_loss)
 
-    eval_score = 1000 * (no_defeat - no_loss)  # 比如说可以这样
     for coor in state.keys():
         # 1.same coordinate player defeat opponent 2.same coordinate opponent defeat player
         num_coor_tokens = len(state[coor])
         # 这是已经变化过的静止的state，一个token上不能出现两个不同的symbol，不同的话在update的时候一个就把另一个吃掉了，
         # 在同一个position上的多个token只可能拥有同一种人symbol吧？
-        #num_differ_symbols = func_symbolsInOneHex(state[coor])
+        # num_differ_symbols = func_symbolsInOneHex(state[coor])
         # if num_coor_tokens > 1 and num_differ_symbols == 2:
         #    for i in range(num_coor_tokens):
         #        if state[coor][i][0] == 'player':
@@ -629,42 +633,64 @@ def evaluation(state, which_side, no_defeat, no_loss, player_or_opponent_list, t
                 for coor_i in state.keys():
                     if coor_i != coor:
                         for other_token in state[coor_i]:
-                            # found token that is also player and has differnent symbol
-                            if other_token[0] == 'player' and if_defeat(other_token[1], state[coor][token_i][1]) != "DRAW":
+                            # found token that is also player and has differnent symbol --> player going to protect other token
+                            #                             if other_token[0] == 'player' and if_defeat(other_token[1], state[coor][token_i][1]) == "LOSE":
+                            #                                 distance = least_distance(
+                            #                                     state, coor, coor_i, player_or_opponent_list, the_other_list, board)
+                            #                                 if distance == 1:
+                            #                                     eval_score += 3
+                            #                                 elif distance == 2:
+                            #                                     eval_score += 2
+                            #                                 elif distance == 3:
+                            #                                     eval_score += 1
+                            #                                 elif distance == 6:
+                            #                                     eval_score += -1
+                            #                                 elif distance == 7:
+                            #                                     eval_score += -2
+                            #                                 elif distance == 8:
+                            #                                     eval_score += -3
+                            # 4.how close are defeatable opponent tokens
+                            if other_token[0] == 'opponent' and if_defeat(state[coor][token_i][1],
+                                                                          other_token[1]) == "WIN":
                                 distance = least_distance(
                                     state, coor, coor_i, player_or_opponent_list, the_other_list, board)
                                 if distance == 1:
-                                    eval_score += 3
+                                    eval_score += 80
                                 elif distance == 2:
-                                    eval_score += 2
+                                    eval_score += 70
                                 elif distance == 3:
-                                    eval_score += 1
+                                    eval_score += 60
+                                elif distance == 4:
+                                    eval_score += 50
+                                elif distance == 5:
+                                    eval_score += 40
                                 elif distance == 6:
-                                    eval_score += -1
+                                    eval_score += 30
+                                elif distance == 7:
+                                    eval_score += 20
+                                elif distance == 8:
+                                    eval_score += 10
+                            # 5.how close are undefeatable opponent tokens
+                            if other_token[0] == 'opponent' and if_defeat(state[coor][token_i][1],
+                                                                          other_token[1]) == "LOSE":
+                                distance = least_distance(
+                                    state, coor, coor_i, player_or_opponent_list, the_other_list, board)
+                                if distance == 1:
+                                    eval_score += -8
+                                elif distance == 2:
+                                    eval_score += -7
+                                elif distance == 3:
+                                    eval_score += -6
+                                elif distance == 4:
+                                    eval_score += -5
+                                elif distance == 5:
+                                    eval_score += -4
+                                elif distance == 6:
+                                    eval_score += -3
                                 elif distance == 7:
                                     eval_score += -2
                                 elif distance == 8:
-                                    eval_score += -3
-                            # 4.how close are defeatable opponent tokens
-                            if other_token[0] == 'opponent' and if_defeat(state[coor][token_i][1], other_token[1]) == "WIN":
-                                distance = least_distance(
-                                    state, coor, coor_i, player_or_opponent_list, the_other_list, board)
-                                if distance == 1:
-                                    eval_score += 30
-                                elif distance == 2:
-                                    eval_score += 20
-                                elif distance == 3:
-                                    eval_score += 10
-                            # 5.how close are undefeatable opponent tokens
-                            if other_token[0] == 'opponent' and if_defeat(state[coor][token_i][1], other_token[1]) == "LOSE":
-                                distance = least_distance(
-                                    state, coor, coor_i, player_or_opponent_list, the_other_list, board)
-                                if distance == 1:
-                                    eval_score += -30
-                                elif distance == 2:
-                                    eval_score += -20
-                                elif distance == 3:
-                                    eval_score += -10
+                                    eval_score += -1
                 # 6.how close are player's token towards our side
                 if which_side == 'upper':
                     if coor[0] == 4:
@@ -684,6 +710,41 @@ def evaluation(state, which_side, no_defeat, no_loss, player_or_opponent_list, t
                         eval_score += 1
                     if coor[0] == -1:
                         eval_score += 0.5
+
+    # if there is defeatable token
+    # accumulate no of symbols for each side
+    # player
+    player_s = 0
+    player_r = 0
+    player_p = 0
+    for item in player_or_opponent_list:
+        for symbol in player_or_opponent_list[item]:
+            if symbol == "s":
+                player_s += 1
+            elif symbol == "r":
+                player_r += 1
+            else:
+                player_p += 1
+    # opponent
+    opponent_s = 0
+    opponent_r = 0
+    opponent_p = 0
+    for item in the_other_list:
+        for symbol in the_other_list[item]:
+            if symbol == "s":
+                opponent_s += 1
+            elif symbol == "r":
+                opponent_r += 1
+            else:
+                opponent_p += 1
+    eval_score += (player_s - opponent_p + player_r - opponent_s + player_p - opponent_r) * 10000
+    #     if (player_s == 0) & (opponent_p != 0):
+    #         eval_score -= 1
+    #     elif (player_r == 0) & (opponent_s != 0):
+    #         eval_score -= 1
+    #     elif (player_p == 0) & (opponent_r != 0):
+    #         #        print("\\\\\\")
+    #         eval_score -= 1
     return eval_score
 
 

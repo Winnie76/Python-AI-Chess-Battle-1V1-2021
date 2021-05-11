@@ -98,9 +98,7 @@ class Player:
 #         print(player_total)
         i = random.randrange(0, no_action, 1)
         self.player_action = tuple(player_total[i])
-        
-        if self.player_action[0] == "THROW":
-            self.throw -= 1
+
         return self.player_action
 
     def update(self, opponent_action, player_action):
@@ -124,6 +122,8 @@ class Player:
 
         # get symbols for opponent and player
         if player_action[0] == "THROW":
+            if self.throw >= 0:
+                self.throw -= 1
             player_symbol = player_action[1]
         else:
             # if more than one token in a hex , they must have the same symbol
