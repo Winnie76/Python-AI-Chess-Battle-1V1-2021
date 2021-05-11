@@ -146,7 +146,7 @@ class Player:
             opp_total = opp_total[0:6]
             
         if self.time > 55.0:
-            return player_total[0]
+            return tuple(player_total[0])
         
         # build min_max tree
         max_layer1 = []
