@@ -12,11 +12,14 @@ class Player:
         """
         # put your code here
         self.player = player
+        self.opponent = ""
         if self.player == "lower":
+            self.opponent == "upper"
             self.r0 = -4
             # for throwing the nth token, domain of available row is r0<=n<r0+n
             self.throw_row_direction = 1
         else:
+            self.opponent == "lower"
             self.r0 = 4
             # for throwing the nth token, domain of available row is r0<=n<r0-n
             self.throw_row_direction = -1
@@ -85,9 +88,9 @@ class Player:
         # store all possible throw actions for player and opponent -- cut out undefeatble possible throw already
         # possible_throw_player = [["THROW", 's', (coor)]]
         possible_throw_player = possible_throw(
-            current_state, board, r0, throw_range, "player")
+            current_state, board, r0, throw_range, "player", self.throw)
         possible_throw_opponent = possible_throw(
-            current_state, board, r0_opp, throw_range_opp, "opponent")
+            current_state, board, r0_opp, throw_range_opp, "opponent", self.oppo_throw)
         
         # player_total = [[...],[...]]     stores all possible actions for player and opponent: slide, swing, throw
         # for player
@@ -100,11 +103,13 @@ class Player:
                 for each in ol:
                     player_total.append(each)
                     
-        player_total += possible_throw_player
+        else:
+            player_total += possible_throw_player
 
         # for opponent
         opp_total = []
         
+
         if self.oppo_throw < 7: #threw 3 tokens already
             for opp in opponent_list:
                 opp_ol = possible_move(
@@ -112,43 +117,170 @@ class Player:
                 for each in opp_ol:
                     opp_total.append(each)
                     
-        opp_total += possible_throw_opponent
+        else:
+            opp_total += possible_throw_opponent
+        
+        #opp_total += possible_throw_opponent
+        
+        #record the number of token throw in the current state
+        player_no_throw = copy.deepcopy(self.throw)
+        opponent_no_throw = copy.deepcopy(self.oppo_throw)
+        
+        # reorder the move of player for improving pruning
+#        print("bfore reorder",current_state)
+        copy_current_state = copy.deepcopy(current_state)
+        player_total = reorder_move(player_total, copy_current_state, 
+                                    self.player, player_list, opponent_list, board, "player")
+        
+        opp_total = reorder_move(opp_total, copy_current_state, 
+                                    self.opponent, opponent_list, player_list, board, "opponent")
+        if len(player_total) > 10:
+            player_total = player_total[0:10]
 
+        if len(opp_total) > 10:
+            opp_total = opp_total[0:10]
+#        print("current_state",current_state)
         # build min_max tree
-        max_layer = []
-        min_max = -10000
-        final_player_action = copy.deepcopy(player_total[0])
+        max_layer1 = []
+        min_max1 = -10000
+#         print("bf minmax current state", current_state)
+        self.player_action = player_total[0]
+#         print("player_total[0]", player_total[0])
         for action in player_total:
-            #print("action is----------------------------",action)
-            min_layer = []
+            min_layer1 = []
+#             print("action in player_total", action)
             for opp_action in opp_total:
+#                print("here self.state",self.state)
+#                print("here current state", current_state)
+                # max_layer2 = []
+                #                 print("action in oppo_total", opp_action)
+                #                 print("current state before Player_update", current_state)
                 self.update(opp_action, action)  # 如果再来一轮 ，应该从这里加入, 感觉可以再加一层）
-                eval_score = evaluation(
-                    self.state, self.player, self.win, self.loss, player_list, opponent_list, board)
-                self.state = copy.deepcopy(current_state)
-                self.throw = copy.deepcopy(no_throw)
-                self.oppo_throw = copy.deepcopy(no_oppo_throw)
-                if eval_score > min_max:
-                    min_layer.append(eval_score)
-#                     self.state = current_state
-                    # 说明这个predecessor下面的node都大于之前的max_min => max_min更改
-                    if opp_action == opp_total[-1]:
-                        min_max = min(min_layer)  # update min_max
-                        # update player_action leads to the state with min_max
-                        final_player_action = copy.deepcopy(action)
-                else:
-                    break
-            max_layer.append(min_layer)
-            
-        # if self.player_action[0] == "THROW" and self.throw >= 0:
-        #    self.throw -= 1
+#                 print("after  Player.update(self, action, opp_action) current state is", current_state)
+#                 print("after  Player.update(self, action, opp_action) self state is", self.state)
+                # record the current state
+                current_new_state = copy.deepcopy(self.state)
+                # record the current number of token throw
+                player_new_no_throw = copy.deepcopy(self.throw)
+                opponent_new_no_throw = copy.deepcopy(self.oppo_throw)
+                
+                # existing player and oppo in the state
+                player_new_list = token_list(current_new_state, "player")
+                opponent_new_list = token_list(current_new_state, "opponent")
+                
+                
+                new_throw_range = r0 + (9 - player_new_no_throw + 1) * self.throw_row_direction
+                new_throw_range_opp = r0_opp + \
+                    (9 - opponent_new_no_throw + 1) * (- self.throw_row_direction)
+                
+                # store all possible throw actions for player and opponent -- cut out undefeatble possible throw already
+                new_possible_throw_player = possible_throw(
+                current_new_state, board, r0, new_throw_range, "player", self.throw)
+                new_possible_throw_opponent = possible_throw(
+                current_new_state, board, r0_opp, new_throw_range_opp, "opponent", self.oppo_throw)
+                
+                # stores all possible actions for player and opponent: slide, swing, throw
+                # for player
+                player_new_total = []
+        
+                if player_new_no_throw < 5:
+                    for item in player_new_list:
+                        ol = possible_move(current_new_state, item,
+                                   player_new_list, opponent_new_list, board)
+                        for each in ol:
+                            player_new_total.append(each)
+                    
+                player_new_total += new_possible_throw_player
+                
+                if len(player_new_total) > 10:
+                    player_new_total = player_new_total[0:10]
 
+                # for opponent
+                opp_new_total = []
+        
+                if opponent_new_no_throw < 5:
+                    for opp in opponent_new_list:
+                        opp_ol = possible_move(
+                                        current_new_state, opp, opponent_new_list, player_new_list, board)
+                        for each in opp_ol:
+                            opp_new_total.append(each)
+                    
+                opp_new_total += new_possible_throw_opponent
+                
+                if len(opp_new_total) > 10:
+                    opp_new_total = opp_new_total[0:10]
+                
+                 # reorder the move of player for improving pruning
+                copy_current_new_state = copy.deepcopy(current_state)
+                player_new_total = reorder_move(player_new_total, copy_current_new_state, 
+                                    self.player, player_new_list, opponent_new_list, board, "player")
+                
+                opp_new_total = reorder_move(opp_new_total, copy_current_new_state, 
+                                    self.opponent, opponent_new_list, player_new_list, board, "opponent")
+                
+                # limit the branch expand
+                if len(player_new_total) > 10:
+                    player_new_total = player_new_total[0:10]
+                if len(opp_new_total) > 10:
+                    opp_new_total = opp_new_total[0:10]
+                
+                min_max = -10000
+                for new_action in player_new_total:
+                    min_layer2 = []
+#                   print("action in player_new_total", new_action)
+                    for opp_new_action in opp_new_total:
+                        #print("current_self.state",self.state)
+                        self.update(opp_new_action, new_action)
+                        eval_score = evaluation(self.state, self.player, self.win, self.loss, player_new_list, 
+                                            opponent_new_list, board)
+#                       print("after eval_score = evaluation(self.sta...) current state is", current_state)
+#                       print("eval score", eval_score)
+                        self.state = copy.deepcopy(current_new_state)
+                        self.throw = copy.deepcopy(player_new_no_throw)
+                        self.oppo_throw = copy.deepcopy(opponent_new_no_throw)
+                        #print("after update_self.state",self.state)
+#                 print("\nafter self.state = current_state, self state is", self.state)
+#                 print("\nnafter self.state = current_state, current_state is", current_state)
+#                 print("\n")
+                        if eval_score > min_max:
+                            min_layer2.append(eval_score)
+#                       self.state = current_state
+#                       print("eval score > min_mac then self state = current state", current_state)
+                        # 说明这个predecessor下面的node都大于之前的max_min => max_min更改
+                            if opp_new_action == opp_new_total[-1]:
+                                min_max = min(min_layer2)  # update min_max
+                                #max_layer2_action = action  # update player_action leads to the state with min_max
+#                       print("self.player_action = action", eval_score)
+                        else:
+#                           print("eval score < min_mac then self state = current state", current_state)
+                            break
+                # min_max is the max of the mins for each second minimax round
+#                min_layer1.append(min_max)
+                self.state = copy.deepcopy(current_state)
+                self.throw = copy.deepcopy(player_no_throw)
+                self.oppo_throw = copy.deepcopy(opponent_no_throw)
+                if min_max > min_max1:
+                    min_layer1.append(min_max)
+                    if opp_action == opp_total[-1]:  # loop 到了opp_total最后一个-->对于一个player action loop完了所有的opp action
+                        min_max1 = min(min_layer1)
+                        final_player_action = action
+                else:
+                    #min_layer1.append(min_max)
+                    break
+
+
+            max_layer1.append(min_layer1)
+        print(max_layer1)
+        # decide action of first round minimax
+#        length = len(max_layer1)
+#        for i in range(length):
+#            if max_layer1[i] == max(max_layer1):
+#                final_player_action = player_total[i]         
+#        print(player_total)
+#        print("min_max",min_max1)
+#        print(current_state)
         return tuple(final_player_action)
 
-        # [[1,2],[2,3]]
-
-        # 加入pruning
-        # 加入后续判断
 
     def update(self, opponent_action, player_action):
         """
@@ -161,7 +293,6 @@ class Player:
         # put your code here
         # format of state & prev_state_record      e.g., {(-5,0):"Block", (-3,2):["player","s"], (-2,3):["opponent","p"]}
         # record the 2 moving tokens' positions in previous state, and delete from the current state
-
         self.win = 0  # no.tokens defeat compare to previous state
         self.loss = 0  # no.tokens loss compare to previous state
 
@@ -275,7 +406,7 @@ class Player:
                                     self.loss += 1  # player token eat player token
                             self.state[player_destination] = [
                                 ["player", player_symbol]]
-                        elif player_destination in self.state and if_defeat(player_symbol, self.state[playre_destination][0][1]) != "WIN":
+                        elif player_destination in self.state and if_defeat(player_symbol, self.state[player_destination][0][1]) != "WIN":
                             self.state[player_destination].append(
                                 ["player", player_symbol])
                         elif player_destination not in self.state:
@@ -293,32 +424,6 @@ class Player:
                 else:
                     self.state[player_destination] = [
                         ["player", player_symbol], ["opponent", opponent_symbol]]
-
-#             # player and opponent actions are not "THROW" then update prev state and delete from current state
-#             prev_state_record = {}  # ?????????????????????????????只记录上一轮的位置吗？？？？？？？？每次update（）都变成空？
-#             # player_action is ("SLIDE or SWING", (x1, y1), (x2, y2))
-#             if player_action[0] != "THROW":
-#                 loc = {player_action[1]: self.state[player_action[1]]}
-#                 if player_action[1] in prev_state_record:
-#                     prev_state_record[player_action[1]].append(["player", player_symbol])
-#                 else:
-#                     prev_state_record.update(loc)
-#                 if len(self.state[player_action[1]]) == 1:
-#                     del self.state[player_action[1]]
-#                 else:
-#                     self.state[player_action[1]].remove(["player", player_symbol])
-
-#             # opponent_action is ("SLIDE or SWING", (x1, y1), (x2, y2))
-#             if opponent_action[0] != "THROW":
-#                 loc = {opponent_action[1]: self.state[opponent_action[1]]}
-#                 if opponent_action[1] in prev_state_record:
-#                     prev_state_record[opponent_action[1]].append(["opponent", opponent_symbol])
-#                 else:
-#                     prev_state_record.update(loc)
-#                 if len(self.state[opponent_action[1]]) == 1:
-#                     del self.state[opponent_action[1]]
-#                 else:
-#                     self.state[opponent_action[1]].remove(["opponent", opponent_symbol])
 
         ####################################################################################################
         # player and opponent go to different destinations
@@ -520,8 +625,9 @@ def possible_throw(state, board, r0, throw_range, who, no_throw):
         reverse = -1
     else:
         reverse = 1
-    
+
     # !!!!!!!!!!!!!等一下我写一下判断和对方symbols差距，然后有针对性的throw！！！！！！
+
     if no_throw == 9:  # no_throw is the number of throws remain
         only_action = ["THROW", character[0], (r0,2*reverse)]
         possible_throw_list.append(only_action)
@@ -536,12 +642,11 @@ def possible_throw(state, board, r0, throw_range, who, no_throw):
         only_action = ["THROW", character[2], (r0+1*reverse,2*reverse)]
         possible_throw_list.append(only_action)
         return possible_throw_list
-    
+
     
     # if no opponent in throw range + 1, then no throw
     #for 
-    
-    
+
     for row in range(r0, throw_range, reverse):  # -4, -3, -2, -1 or 4, 3, 2, 1(reverse)
         
         
@@ -776,3 +881,106 @@ def evaluation(state, which_side, no_defeat, no_loss, player_or_opponent_list, t
         #        print("\\\\\\")
         eval_score -= 1
     return eval_score
+
+
+def update_player_action(player_action, current_state, who): #前面记得把no_defeat和loss归0
+    prev_state_record = {}
+    no_defeat = 0
+    no_loss = 0
+#    print("带进去的current——state",current_state)
+    copy_current_state = copy.deepcopy(current_state)
+    # opponent_or_player带入“opponent” or “player”
+    if player_action[0] != "THROW":
+        # for multiple tokens in one state, all symbols should be the same
+        # player_action[1] => previous position
+#        print("---------------------------=================")
+#        print(current_state)
+#        print(player_action)
+#        print("---------------------------=================")
+        symbol = current_state[player_action[1]][0][1]
+        loc = {player_action[1]: [who, symbol]}
+        prev_state_record.update(loc)
+        # if the position in the previous state only has one token, then delete it from the state
+        # if there are multiple tokens, then delete the corresponding one
+        if len(current_state[player_action[1]]) == 1:
+            del current_state[player_action[1]]
+        else:
+            print("here notice", current_state)
+            print("\n")
+            print(player_action)
+            print(symbol)
+            current_state[player_action[1]].remove([who, symbol])
+    
+    if player_action[0] == "THROW":
+        if player_action[2] not in current_state:
+            loc = {player_action[2]: [[who, player_action[1]]]}
+            current_state.update(loc)
+        else:
+            # if another token occupy the same place, need to check which token wins
+            # rps means rock paper or scissors
+            rps = player_action[1]
+            old_rps = (current_state[player_action[2]])[0][1]
+            if if_defeat(rps, old_rps) == "WIN":
+                for item in current_state[player_action[2]]:
+                    if item[0] != who:
+                        no_defeat += 1  # player token eat opponent token
+                    else:
+                        no_loss += 1  # player token eat player token
+                current_state[player_action[2]] = [[who, rps]]
+            elif if_defeat(rps, old_rps) == "DRAW":
+                current_state[player_action[2]].append([who, rps])
+            else:
+                # if this token lose, then take this token away from the state
+                pass
+    else:
+        # if the action is not throw, the rps has been recorded before
+        previous_loc = player_action[1]
+        rps = (prev_state_record[previous_loc])[1]
+        if player_action[2] not in current_state:
+            loc = {player_action[2]: [[who, rps]]}
+            current_state.update(loc)
+        else:
+            # if another token occupy the same place, need to check which token wins
+            old_rps = (current_state[player_action[2]])[0][1]
+            if if_defeat(rps, old_rps) == "WIN":
+                for item in current_state[player_action[2]]:
+                    if item[0] != who:
+                        no_defeat += 1  # player token eat opponent token
+                    else:
+                        no_loss += 1  # player token eat player token
+                current_state[player_action[2]] = [[who, rps]]
+            elif if_defeat(rps, old_rps) == "DRAW":
+                current_state[player_action[2]].append([who, rps])
+            else:
+                # if this token lose, then take this token away from the state
+                pass
+    list_to_return = [current_state, no_defeat, no_loss]
+    current_state = copy.deepcopy(copy_current_state)
+    return list_to_return
+
+def reorder_move(player_total, current_state, upper_or_lower, player_list, opponent_list, board, who):
+    move_eval_list = []
+    copy_current_state = copy.deepcopy(current_state)
+    for move in player_total:
+        list_of_return = update_player_action(move, current_state, who)
+        move_state = list_of_return[0]
+        move_no_defeat = list_of_return[1]
+        move_no_loss = list_of_return[2]
+        move_eval = evaluation(move_state, upper_or_lower, move_no_defeat, move_no_loss, player_list, 
+                            opponent_list, board)
+        move_eval_list.append(move_eval)
+        current_state = copy.deepcopy(copy_current_state)
+
+    #insertion sort
+    for i in range(1, len(player_total)):
+        val = move_eval_list[i]
+        move = player_total[i]
+        j = i
+        while (move_eval_list[j-1] < val) & (j > 0):
+            move_eval_list[j] = move_eval_list[j-1]
+            player_total[j] = player_total[j-1]
+            j-=1
+        move_eval_list[j] = val
+        player_total[j] = move
+    current_state = copy.deepcopy(copy_current_state)
+    return player_total
