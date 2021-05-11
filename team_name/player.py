@@ -83,8 +83,7 @@ class Player:
         else:
             throw_range_opp = r0_opp + \
             (9 - self.oppo_throw + 1) * (- self.throw_row_direction)
-            
-    
+
 
         # store all possible throw actions for player and opponent -- cut out undefeatble possible throw already
         # possible_throw_player = [["THROW", 's', (coor)]]
@@ -103,10 +102,11 @@ class Player:
                                    player_list, opponent_list, board)
                 for each in ol:
                     player_total.append(each)
+            player_total += possible_throw_player
                     
         else:
             player_total += possible_throw_player
-
+#        print("player_total", player_total)
         # for opponent
         opp_total = []
         
@@ -117,6 +117,7 @@ class Player:
                     current_state, opp, opponent_list, player_list, board)
                 for each in opp_ol:
                     opp_total.append(each)
+            opp_total += possible_throw_opponent
                     
         else:
             opp_total += possible_throw_opponent
@@ -132,6 +133,7 @@ class Player:
         copy_current_state = copy.deepcopy(current_state)
         player_total = reorder_move(player_total, copy_current_state, 
                                     self.player, player_list, opponent_list, board, "player")
+#        print("player_total2", player_total)
         
         opp_total = reorder_move(opp_total, copy_current_state, 
                                     self.opponent, opponent_list, player_list, board, "opponent")
@@ -147,6 +149,8 @@ class Player:
 #         print("bf minmax current state", current_state)
         self.player_action = player_total[0]
 #         print("player_total[0]", player_total[0])
+#        print(no_throw)
+        final_player_action = player_total[0]
         for action in player_total:
             min_layer1 = []
 #             print("action in player_total", action)
@@ -185,7 +189,7 @@ class Player:
                 # for player
                 player_new_total = []
         
-                if player_new_no_throw < 5:
+                if player_new_no_throw < 7:
                     for item in player_new_list:
                         ol = possible_move(current_new_state, item,
                                    player_new_list, opponent_new_list, board)
@@ -196,11 +200,11 @@ class Player:
                 
                 if len(player_new_total) > 10:
                     player_new_total = player_new_total[0:10]
-
+#               print("player_new_total", player_new_total)
                 # for opponent
                 opp_new_total = []
         
-                if opponent_new_no_throw < 5:
+                if opponent_new_no_throw < 7:
                     for opp in opponent_new_list:
                         opp_ol = possible_move(
                                         current_new_state, opp, opponent_new_list, player_new_list, board)
@@ -216,7 +220,9 @@ class Player:
                 copy_current_new_state = copy.deepcopy(current_new_state)
                 player_new_total = reorder_move(player_new_total, copy_current_new_state, 
                                     self.player, player_new_list, opponent_new_list, board, "player")
-                
+
+#                print("player_new_total", player_new_total)
+
                 opp_new_total = reorder_move(opp_new_total, copy_current_new_state, 
                                     self.opponent, opponent_new_list, player_new_list, board, "opponent")
                 
@@ -236,7 +242,7 @@ class Player:
                         eval_score = evaluation(self.state, self.player, self.win, self.loss, player_new_list, 
                                             opponent_new_list, board)
 #                       print("after eval_score = evaluation(self.sta...) current state is", current_state)
-#                       print("eval score", eval_score)
+#                        print("eval score", eval_score)
                         self.state = copy.deepcopy(current_new_state)
                         self.throw = copy.deepcopy(player_new_no_throw)
                         self.oppo_throw = copy.deepcopy(opponent_new_no_throw)
@@ -271,7 +277,7 @@ class Player:
                     break
 
             max_layer1.append(min_layer1)
-        print(max_layer1)
+#        print(max_layer1)
         # decide action of first round minimax
 #        length = len(max_layer1)
 #        for i in range(length):
@@ -279,7 +285,7 @@ class Player:
 #                final_player_action = player_total[i]         
 #        print(player_total)
 #        print("min_max",min_max1)
-        print(current_state)
+#        print(current_state)
         return tuple(final_player_action)
 
 
@@ -620,63 +626,187 @@ def if_defeat(new, old):
 
 
 def possible_throw(state, board, r0, throw_range, who, no_throw):
+    #print("no_throw",no_throw)
     character = ["r", "s", "p"]
+
     possible_throw_list = []
+
     if r0 == 4:
         reverse = -1
     else:
         reverse = 1
 
     # !!!!!!!!!!!!!等一下我写一下判断和对方symbols差距，然后有针对性的throw！！！！！！
-
     if no_throw == 9:  # no_throw is the number of throws remain
-        only_action = ["THROW", character[0], (r0,2*reverse)]
+        only_action = ["THROW", character[0], (r0, 2 * reverse)]
         possible_throw_list.append(only_action)
         return possible_throw_list
-    
+
     if no_throw == 8:
-        only_action = ["THROW", character[1], (r0+1*reverse,1*reverse)]
+        only_action = ["THROW", character[1], (r0 + 1 * reverse, 1 * reverse)]
         possible_throw_list.append(only_action)
         return possible_throw_list
-    
+
     if no_throw == 7:
-        only_action = ["THROW", character[2], (r0+1*reverse,2*reverse)]
+        only_action = ["THROW", character[2], (r0 + 1 * reverse, 2 * reverse)]
         possible_throw_list.append(only_action)
         return possible_throw_list
 
-    
-    # if no opponent in throw range + 1, then no throw
-    #for 
+    if no_throw == 0:
+        return possible_throw_list
 
-    for row in range(r0, throw_range, reverse):  # -4, -3, -2, -1 or 4, 3, 2, 1(reverse)
-        
-        
-        for item in board:
-            if item[0] == row:
-                #                 print("yes if item[0] == row:")
-                if item not in state:
-                    #                     print("yes if item not in state:")
-                    for char in character:
-                        item_format = ["THROW", char, item]
-                        possible_throw_list.append(item_format)
-#                         print("yes appended")
-                # 当（coor）在state里，说明有其他token，那就要看 我方 还是 敌方。如果是我方：不throw了，因为无论输赢平局都没给棋盘增加 eval_score
-                # 如果是敌方：只有赢的情况下 throw
-                # 这样做是为了减少 time complexity， 因为dime fox很容易超时
+        # if no opponent in throw range + 1, then no throw
+    has_oppo = 0
+    player_s = 0
+    player_r = 0
+    player_p = 0
+
+    opponent_s = 0
+    opponent_r = 0
+    opponent_p = 0
+    for coor in state:
+        # count symbols for player and oppo in the state
+        for token in state[coor]:
+            if token[0] == who:
+                if token[1] == "s":
+                    player_s += 1
+                elif token[1] == "r":
+                    player_r += 1
                 else:
-                    has_who = 0
-                    # check if token existed in the state is from our side or not
-                    for token in state[item]:
-                        if token[0] == who:
-                            has_who = 1
-                        else:
-                            oppo_symb = token[1]
-                    # if token at that hex is not from our side, put symbol that can defeat oppo into possible throw
-                    if has_who == 0:
-                        for char in character:
-                            if if_defeat(char, oppo_symb) == "WIN":
-                                item_format = ["THROW", char, item]
-                                possible_throw_list.append(item_format)
+                    player_p += 1
+            else:
+                if token[1] == "s":
+                    opponent_s += 1
+                elif token[1] == "r":
+                    opponent_r += 1
+                else:
+                    opponent_p += 1
+        # throw on opponent tokens
+        if r0 == 4 and coor[0] >= throw_range + 1:
+            for token in state[coor]:  # all token in throw range
+                if token[0] != who:  # if token in throw range is opponent
+                    has_oppo = 1  # hasoppo = 1
+                    for char in character:  # find the win symbol of that token
+                        if if_defeat(char, token[1]) == "WIN":
+                            symbol_win = char
+                    six_hex = six_hex_surrond(coor)
+                    has_other_oppo = 0
+                    # check 6 hex has undefeatable token or not
+                    for one_hex in six_hex:  # [x, y]
+                        if tuple(one_hex) in state:
+                            for one_token in state[tuple(one_hex)]:
+                                if one_token[0] != who and if_defeat(symbol_win, one_token[1]) == "LOSE":
+                                    has_other_oppo = 1
+                    # no undefeatable oppo in 6 hex surrounds then append throw
+                    if has_other_oppo == 0:
+                        possible_throw_list.append(["THROW", symbol_win, coor])
+                    # else not consider that coordinate to throw
+                    else:
+                        break
+        elif r0 == -4 and coor[0] <= throw_range + 1:
+            for token in state[coor]:  # all token in throw range
+                if token[0] != who:  # if token in throw range is opponent
+                    has_oppo = 1  # hasoppo = 1
+                    for char in character:  # find the win symbol of that token
+                        if if_defeat(char, token[1]) == "WIN":
+                            symbol_win = char
+                    six_hex = six_hex_surrond(coor)
+                    has_other_oppo = 0
+                    # check 6 hex has undefeatable token or not
+                    for one_hex in six_hex:  # [x, y]
+                        if tuple(one_hex) in state:
+                            for one_token in state[tuple(one_hex)]:
+                                if one_token[0] != who and if_defeat(symbol_win, one_token[1]) == "LOSE":
+                                    has_other_oppo = 1
+                    # no undefeatable oppo in 6 hex surrounds then append throw
+                    if has_other_oppo == 0:
+                        possible_throw_list.append(["THROW", symbol_win, coor])
+                    # else not consider that coordinate to throw
+                    else:
+                        break
+
+    # balance symbol in state
+    throw_list_upp = [(1, -2), (1, -1), (1, 0), (1, 1), (1, 2), (1, 3), (1, -4), (1, -3)]
+    throw_list_low = [(-1, -1), (-1, 0), (-1, 1), (-1, 2), (-1, 3), (-1, 4), (-1, -3), (-1, -2)]
+    if r0 == 4:
+        throw_where = throw_list_upp
+    else:
+        throw_where = throw_list_low
+    # throw more paper
+    if (player_p == 0 and opponent_r > 0) or (opponent_r - player_p > 2 and player_p != 0):
+        for coor in throw_where:
+            if coor not in state:
+                six_hex = six_hex_surrond(coor)
+                has_other_oppo = 0
+                # check 6 hex has undefeatable token or not
+                for one_hex in six_hex:  # [x, y]
+                    if tuple(one_hex) in state:
+                        for one_token in state[tuple(one_hex)]:
+                            if one_token[0] != who and if_defeat('p', one_token[1]) == "LOSE":
+                                has_other_oppo = 1
+                # no undefeatable oppo in 6 hex surrounds then append throw
+                if has_other_oppo == 0:
+                    possible_throw_list.append(["THROW", 'p', coor])
+                    break
+    if (player_s == 0 and opponent_p > 0) or (opponent_p - player_s > 2 and player_s != 0):
+        for coor in throw_where:
+            if coor not in state:
+                six_hex = six_hex_surrond(coor)
+                has_other_oppo = 0
+                # check 6 hex has undefeatable token or not
+                for one_hex in six_hex:  # [x, y]
+                    if tuple(one_hex) in state:
+                        for one_token in state[tuple(one_hex)]:
+                            if one_token[0] != who and if_defeat('s', one_token[1]) == "LOSE":
+                                has_other_oppo = 1
+                # no undefeatable oppo in 6 hex surrounds then append throw
+                if has_other_oppo == 0:
+                    possible_throw_list.append(["THROW", 's', coor])
+                    break
+    if (player_r == 0 and opponent_s > 0) or (opponent_s - player_r > 2 and player_r != 0):
+        for coor in throw_where:
+            if coor not in state:
+                six_hex = six_hex_surrond(coor)
+                has_other_oppo = 0
+                # check 6 hex has undefeatable token or not
+                for one_hex in six_hex:  # [x, y]
+                    if tuple(one_hex) in state:
+                        for one_token in state[tuple(one_hex)]:
+                            if one_token[0] != who and if_defeat('r', one_token[1]) == "LOSE":
+                                has_other_oppo = 1
+                # no undefeatable oppo in 6 hex surrounds then append throw
+                if has_other_oppo == 0:
+                    possible_throw_list.append(["THROW", 'r', coor])
+                    break
+
+    #     for row in range(r0, throw_range, reverse):  # -4, -3, -2, -1 or 4, 3, 2, 1(reverse)
+
+    #         for item in board:
+    #             if item[0] == row:
+    #                 #                 print("yes if item[0] == row:")
+    #                 if item not in state:
+    #                     #                     print("yes if item not in state:")
+    #                     for char in character:
+    #                         item_format = ["THROW", char, item]
+    #                         possible_throw_list.append(item_format)
+    # #                         print("yes appended")
+    #                 # 当（coor）在state里，说明有其他token，那就要看 我方 还是 敌方。如果是我方：不throw了，因为无论输赢平局都没给棋盘增加 eval_score
+    #                 # 如果是敌方：只有赢的情况下 throw
+    #                 # 这样做是为了减少 time complexity， 因为dime fox很容易超时
+    #                 else:
+    #                     has_who = 0
+    #                     # check if token existed in the state is from our side or not
+    #                     for token in state[item]:
+    #                         if token[0] == who:
+    #                             has_who = 1
+    #                         else:
+    #                             oppo_symb = token[1]
+    #                     # if token at that hex is not from our side, put symbol that can defeat oppo into possible throw
+    #                     if has_who == 0:
+    #                         for char in character:
+    #                             if if_defeat(char, oppo_symb) == "WIN":
+    #                                 item_format = ["THROW", char, item]
+    #                                 possible_throw_list.append(item_format)
 
     return possible_throw_list
 
@@ -745,15 +875,14 @@ def least_distance(state, token1, token2, player_or_opponent_list, the_other_lis
 
 
 def evaluation(state, which_side, no_defeat, no_loss, player_or_opponent_list, the_other_list, board):
-    
-    eval_score = 1000 * (no_defeat - no_loss)  
-    
+    eval_score = 1000 * (no_defeat - no_loss)
+
     for coor in state.keys():
         # 1.same coordinate player defeat opponent 2.same coordinate opponent defeat player
         num_coor_tokens = len(state[coor])
         # 这是已经变化过的静止的state，一个token上不能出现两个不同的symbol，不同的话在update的时候一个就把另一个吃掉了，
         # 在同一个position上的多个token只可能拥有同一种人symbol吧？
-        #num_differ_symbols = func_symbolsInOneHex(state[coor])
+        # num_differ_symbols = func_symbolsInOneHex(state[coor])
         # if num_coor_tokens > 1 and num_differ_symbols == 2:
         #    for i in range(num_coor_tokens):
         #        if state[coor][i][0] == 'player':
@@ -773,43 +902,45 @@ def evaluation(state, which_side, no_defeat, no_loss, player_or_opponent_list, t
                     if coor_i != coor:
                         for other_token in state[coor_i]:
                             # found token that is also player and has differnent symbol --> player going to protect other token
-#                             if other_token[0] == 'player' and if_defeat(other_token[1], state[coor][token_i][1]) == "LOSE":
-#                                 distance = least_distance(
-#                                     state, coor, coor_i, player_or_opponent_list, the_other_list, board)
-#                                 if distance == 1:
-#                                     eval_score += 3
-#                                 elif distance == 2:
-#                                     eval_score += 2
-#                                 elif distance == 3:
-#                                     eval_score += 1
-#                                 elif distance == 6:
-#                                     eval_score += -1
-#                                 elif distance == 7:
-#                                     eval_score += -2
-#                                 elif distance == 8:
-#                                     eval_score += -3
+                            #                             if other_token[0] == 'player' and if_defeat(other_token[1], state[coor][token_i][1]) == "LOSE":
+                            #                                 distance = least_distance(
+                            #                                     state, coor, coor_i, player_or_opponent_list, the_other_list, board)
+                            #                                 if distance == 1:
+                            #                                     eval_score += 3
+                            #                                 elif distance == 2:
+                            #                                     eval_score += 2
+                            #                                 elif distance == 3:
+                            #                                     eval_score += 1
+                            #                                 elif distance == 6:
+                            #                                     eval_score += -1
+                            #                                 elif distance == 7:
+                            #                                     eval_score += -2
+                            #                                 elif distance == 8:
+                            #                                     eval_score += -3
                             # 4.how close are defeatable opponent tokens
-                            if other_token[0] == 'opponent' and if_defeat(state[coor][token_i][1], other_token[1]) == "WIN":
+                            if other_token[0] == 'opponent' and if_defeat(state[coor][token_i][1],
+                                                                          other_token[1]) == "WIN":
                                 distance = least_distance(
                                     state, coor, coor_i, player_or_opponent_list, the_other_list, board)
                                 if distance == 1:
-                                    eval_score += 8
+                                    eval_score += 80
                                 elif distance == 2:
-                                    eval_score += 7
+                                    eval_score += 70
                                 elif distance == 3:
-                                    eval_score += 6
+                                    eval_score += 60
                                 elif distance == 4:
-                                    eval_score += 5
+                                    eval_score += 50
                                 elif distance == 5:
-                                    eval_score += 4
+                                    eval_score += 40
                                 elif distance == 6:
-                                    eval_score += 3
+                                    eval_score += 30
                                 elif distance == 7:
-                                    eval_score += 2
+                                    eval_score += 20
                                 elif distance == 8:
-                                    eval_score += 1
+                                    eval_score += 10
                             # 5.how close are undefeatable opponent tokens
-                            if other_token[0] == 'opponent' and if_defeat(state[coor][token_i][1], other_token[1]) == "LOSE":
+                            if other_token[0] == 'opponent' and if_defeat(state[coor][token_i][1],
+                                                                          other_token[1]) == "LOSE":
                                 distance = least_distance(
                                     state, coor, coor_i, player_or_opponent_list, the_other_list, board)
                                 if distance == 1:
@@ -874,15 +1005,15 @@ def evaluation(state, which_side, no_defeat, no_loss, player_or_opponent_list, t
                 opponent_r += 1
             else:
                 opponent_p += 1
-    if (player_s == 0) & (opponent_p != 0):
-        eval_score -= 1
-    elif (player_r == 0) & (opponent_s != 0):
-        eval_score -= 1
-    elif (player_p == 0) & (opponent_r != 0):
-        #        print("\\\\\\")
-        eval_score -= 1
+    eval_score += (player_s - opponent_p + player_r - opponent_s + player_p - opponent_r) * 10000
+    #     if (player_s == 0) & (opponent_p != 0):
+    #         eval_score -= 1
+    #     elif (player_r == 0) & (opponent_s != 0):
+    #         eval_score -= 1
+    #     elif (player_p == 0) & (opponent_r != 0):
+    #         #        print("\\\\\\")
+    #         eval_score -= 1
     return eval_score
-
 
 def update_player_action(player_action, current_state, who): #前面记得把no_defeat和loss归0
     prev_state_record = {}
