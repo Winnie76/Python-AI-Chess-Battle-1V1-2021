@@ -640,7 +640,7 @@ def possible_throw(state, board, r0, throw_range, who, no_throw):
 
     # !!!!!!!!!!!!!等一下我写一下判断和对方symbols差距，然后有针对性的throw！！！！！！
     if no_throw == 9:  # no_throw is the number of throws remain
-        only_action = ["THROW", character[0], (r0, 2 * reverse)]
+        only_action = ["THROW", character[0], (r0, 1 * reverse)]
         possible_throw_list.append(only_action)
         return possible_throw_list
 
@@ -650,7 +650,7 @@ def possible_throw(state, board, r0, throw_range, who, no_throw):
         return possible_throw_list
 
     if no_throw == 7:
-        only_action = ["THROW", character[2], (r0 + 1 * reverse, 2 * reverse)]
+        only_action = ["THROW", character[2], (r0 + 1 * reverse, 1 * reverse)]
         possible_throw_list.append(only_action)
         return possible_throw_list
 
