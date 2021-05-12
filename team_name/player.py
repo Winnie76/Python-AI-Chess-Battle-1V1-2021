@@ -650,7 +650,7 @@ def possible_throw(state, board, r0, throw_range, who, no_throw):
         return possible_throw_list
 
     if no_throw == 7:
-        only_action = ["THROW", character[2], (r0 + 1 * reverse, 1 * reverse)]
+        only_action = ["THROW", character[2], (r0 + 2 * reverse, 1 * reverse)]
         possible_throw_list.append(only_action)
         return possible_throw_list
 
