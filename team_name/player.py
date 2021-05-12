@@ -962,6 +962,7 @@ def evaluation(state, which_side, no_defeat, no_loss, player_or_opponent_list, t
                                 elif distance == 8:
                                     eval_score += -10
                 # 6.how close are player's token towards our side
+                # ???????这里要加吗self.oppo_throw != 9 时限制在player side？？？？？
                 if which_side == 'upper':
                     if coor[0] == 4:
                         eval_score += 2
@@ -1007,13 +1008,13 @@ def evaluation(state, which_side, no_defeat, no_loss, player_or_opponent_list, t
                 opponent_r += 1
             else:
                 opponent_p += 1
-    #eval_score += (player_s - opponent_p + player_r - opponent_s + player_p - opponent_r) * 10000
-    if (player_s - opponent_p) >= 2:
-        eval_score -=  1000
-    if (player_r - opponent_s) >= 2:
-        eval_score -=  1000
-    if (player_p - opponent_r) >= 2:
-        eval_score -=  1000
+    # 2 > differnece >=0 (differnece within 0 or 1 is encouraged)
+    if (player_s - opponent_p) >= 0 and (opponent_p > 0) and (player_s - opponent_p) < 2:
+        eval_score +=  1000
+    if (player_r - opponent_s) >= 0 and (opponent_s > 0) and (player_r - opponent_s) < 2:
+        eval_score +=  1000
+    if (player_p - opponent_r)  >= 0 and (opponent_r > 0) and (player_p - opponent_r) < 2:
+        eval_score +=  1000
     return eval_score
 
 def update_player_action(player_action, current_state, who): #前面记得把no_defeat和loss归0
