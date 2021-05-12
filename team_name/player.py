@@ -684,7 +684,7 @@ def possible_throw(state, board, r0, throw_range, who, no_throw):
                 else:
                     opponent_p += 1
         # throw on opponent tokens
-        if r0 == 4 and coor[0] >= throw_range + 1:
+        if r0 == 4 and coor[0] > throw_range:
             for token in state[coor]:  # all token in throw range
                 if token[0] != who:  # if token in throw range is opponent
                     has_oppo = 1  # hasoppo = 1
@@ -705,7 +705,7 @@ def possible_throw(state, board, r0, throw_range, who, no_throw):
                     # else not consider that coordinate to throw
                     else:
                         break
-        elif r0 == -4 and coor[0] <= throw_range + 1:
+        elif r0 == -4 and coor[0] < throw_range:
             for token in state[coor]:  # all token in throw range
                 if token[0] != who:  # if token in throw range is opponent
                     has_oppo = 1  # hasoppo = 1
